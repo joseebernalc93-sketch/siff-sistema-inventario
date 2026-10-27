@@ -44,7 +44,9 @@ import {
   LayoutGrid,
   List,
   Image as ImageIcon,
-  ExternalLink
+  ExternalLink,
+  ArrowRight,
+  RefreshCw
 } from "lucide-react";
 import { SIFF_PRODUCTS_DATA, SiffProduct } from "@/lib/siff-products";
 
@@ -287,6 +289,15 @@ export default function SiffProposalDemo() {
   const [newBrand, setNewBrand] = useState<string>("Danfoss");
   const [newImageUrl, setNewImageUrl] = useState<string>("");
 
+  // Interactive KPI Card Filters & Modals
+  const [activeKpiFilter, setActiveKpiFilter] = useState<"ALL" | "LOW_STOCK">("ALL");
+  const [isStockBreakdownOpen, setIsStockBreakdownOpen] = useState<boolean>(false);
+  const [isTransfersModalOpen, setIsTransfersModalOpen] = useState<boolean>(false);
+  const [newTransferProductCode, setNewTransferProductCode] = useState<string>("AKS5898");
+  const [newTransferFrom, setNewTransferFrom] = useState<"Bodega Central" | "Oficina Matriz">("Bodega Central");
+  const [newTransferTo, setNewTransferTo] = useState<"Bodega Central" | "Oficina Matriz">("Oficina Matriz");
+  const [newTransferQty, setNewTransferQty] = useState<number>(2);
+
   // Handle Login Authentication
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -337,15 +348,16 @@ export default function SiffProposalDemo() {
     return products.filter((p) => {
       const matchLocation = selectedLocation === "TODAS" || p.location === selectedLocation;
       const matchCategory = selectedCategory === "TODAS" || p.category === selectedCategory;
+      const matchKpi = activeKpiFilter === "LOW_STOCK" ? p.stock <= p.minStock : true;
       const matchSearch =
         searchQuery === "" ||
         p.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.lot.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchLocation && matchCategory && matchSearch;
+      return matchLocation && matchCategory && matchSearch && matchKpi;
     });
-  }, [products, selectedLocation, selectedCategory, searchQuery]);
+  }, [products, selectedLocation, selectedCategory, searchQuery, activeKpiFilter]);
 
   // Dashboard Metrics
   const metrics = useMemo(() => {
@@ -356,6 +368,82 @@ export default function SiffProposalDemo() {
     const totalStockUnits = products.reduce((acc, p) => acc + p.stock, 0);
     return { totalItems, bodegaCount, oficinaCount, lowStockCount, totalStockUnits };
   }, [products]);
+
+  // Analytical Breakdown of Stock Units
+  const stockBreakdown = useMemo(() => {
+    const bodegaUnits = products
+      .filter((p) => p.location === "Bodega Central")
+      .reduce((acc, p) => acc + p.stock, 0);
+    const oficinaUnits = products
+      .filter((p) => p.location === "Oficina Matriz")
+      .reduce((acc, p) => acc + p.stock, 0);
+    const totalUnits = bodegaUnits + oficinaUnits;
+
+    // Breakdown by Category
+    const categoryMap: Record<string, { count: number; units: number }> = {};
+    products.forEach((p) => {
+      if (!categoryMap[p.category]) {
+        categoryMap[p.category] = { count: 0, units: 0 };
+      }
+      categoryMap[p.category].count += 1;
+      categoryMap[p.category].units += p.stock;
+    });
+
+    const categoriesStats = Object.entries(categoryMap)
+      .map(([cat, stat]) => ({
+        name: cat,
+        count: stat.count,
+        units: stat.units,
+        percentage: totalUnits > 0 ? Math.round((stat.units / totalUnits) * 100) : 0
+      }))
+      .sort((a, b) => b.units - a.units);
+
+    // Top 5 products with highest physical stock
+    const topProducts = [...products]
+      .sort((a, b) => b.stock - a.stock)
+      .slice(0, 5);
+
+    return { bodegaUnits, oficinaUnits, totalUnits, categoriesStats, topProducts };
+  }, [products]);
+
+  // Transfers handlers
+  const handleConfirmTransferReceipt = (transferId: string) => {
+    setTransfers((prev) =>
+      prev.map((t) => (t.id === transferId ? { ...t, status: "RECIBIDO" } : t))
+    );
+    setToastMessage("✅ Traspaso recibido exitosamente en almacén de destino.");
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const handleCreateNewTransfer = (e: React.FormEvent) => {
+    e.preventDefault();
+    const prod = products.find((p) => p.code === newTransferProductCode);
+    if (!prod) return;
+    if (newTransferFrom === newTransferTo) {
+      alert("El origen y destino deben ser diferentes");
+      return;
+    }
+    if (newTransferQty <= 0) {
+      alert("La cantidad debe ser mayor a 0");
+      return;
+    }
+
+    const newTransfer: TransferRecord = {
+      id: `trf-${Date.now().toString().slice(-3)}`,
+      date: "Hoy, " + new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      productCode: prod.code,
+      productName: prod.name,
+      from: newTransferFrom,
+      to: newTransferTo,
+      quantity: newTransferQty,
+      status: "EN TRÁNSITO",
+      requestedBy: currentUser?.name || "Gerencia General"
+    };
+
+    setTransfers((prev) => [newTransfer, ...prev]);
+    setToastMessage(`🚀 Traspaso iniciado: ${newTransferQty}x ${prod.code} (${newTransferFrom} → ${newTransferTo})`);
+    setTimeout(() => setToastMessage(null), 4000);
+  };
 
   // Handle Movement submission
   const handleConfirmMovement = () => {
@@ -876,50 +964,144 @@ export default function SiffProposalDemo() {
             </div>
           </div>
 
-          {/* Gerencia KPI Summary Cards */}
+          {/* Gerencia Interactive KPI Buttons */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow">
+            {/* KPI 1: Total Repuestos -> Click to reset and show full catalog */}
+            <button
+              type="button"
+              onClick={() => {
+                setActiveKpiFilter("ALL");
+                setSelectedLocation("TODAS");
+                setSelectedCategory("TODAS");
+                setSearchQuery("");
+                setGerenciaSubTab("inventario");
+                setToastMessage("Catálogo completo restablecido (357 repuestos).");
+                setTimeout(() => setToastMessage(null), 3000);
+              }}
+              className={`group relative text-left rounded-2xl p-5 shadow transition-all duration-200 transform hover:-translate-y-1 active:scale-[0.98] ${
+                activeKpiFilter === "ALL" && selectedLocation === "TODAS" && selectedCategory === "TODAS" && !searchQuery
+                  ? "bg-slate-900 border-2 border-amber-500/70 shadow-lg shadow-amber-500/10 ring-2 ring-amber-500/20"
+                  : "bg-slate-900 border border-slate-800 hover:border-amber-500/50 hover:shadow-lg hover:shadow-amber-500/5"
+              }`}
+            >
               <div className="text-slate-400 text-xs font-bold flex items-center justify-between mb-2">
-                <span>TOTAL REPUESTOS</span>
-                <Package className="w-4 h-4 text-amber-400" />
+                <span className="group-hover:text-amber-400 transition-colors">TOTAL REPUESTOS</span>
+                <Package className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
               </div>
               <div className="text-2xl sm:text-3xl font-black text-white">{metrics.totalItems}</div>
               <p className="text-xs text-slate-500 mt-1">Bodega ({metrics.bodegaCount}) • Oficina ({metrics.oficinaCount})</p>
-            </div>
+              <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-amber-400/90 font-medium">
+                <span>Ver catálogo completo</span>
+                <RefreshCw className="w-3 h-3 group-hover:rotate-180 transition-transform duration-500" />
+              </div>
+            </button>
 
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow">
+            {/* KPI 2: Total Unidades en Stock -> Click to open analytical breakdown */}
+            <button
+              type="button"
+              onClick={() => setIsStockBreakdownOpen(true)}
+              className="group relative text-left bg-slate-900 border border-slate-800 hover:border-emerald-500/60 rounded-2xl p-5 shadow hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-200 transform hover:-translate-y-1 active:scale-[0.98]"
+            >
               <div className="text-slate-400 text-xs font-bold flex items-center justify-between mb-2">
-                <span>TOTAL UNIDADES EN STOCK</span>
-                <TrendingUp className="w-4 h-4 text-emerald-400" />
+                <span className="group-hover:text-emerald-400 transition-colors">TOTAL UNIDADES EN STOCK</span>
+                <TrendingUp className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
               </div>
               <div className="text-2xl sm:text-3xl font-black text-emerald-400">
                 {metrics.totalStockUnits.toLocaleString()} un.
               </div>
               <p className="text-xs text-slate-500 mt-1">Existencias físicas consolidadas</p>
-            </div>
+              <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-emerald-400 font-medium">
+                <span>Ver desglose por bodega</span>
+                <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </button>
 
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow">
+            {/* KPI 3: Stock Crítico -> Click to instantly filter critical items */}
+            <button
+              type="button"
+              onClick={() => {
+                if (activeKpiFilter === "LOW_STOCK") {
+                  setActiveKpiFilter("ALL");
+                  setToastMessage("Filtro de stock crítico desactivado.");
+                } else {
+                  setActiveKpiFilter("LOW_STOCK");
+                  setGerenciaSubTab("inventario");
+                  setToastMessage("⚠️ Filtrando: Repuestos con stock crítico (≤ 2 un.)");
+                }
+                setTimeout(() => setToastMessage(null), 3500);
+              }}
+              className={`group relative text-left rounded-2xl p-5 shadow transition-all duration-200 transform hover:-translate-y-1 active:scale-[0.98] ${
+                activeKpiFilter === "LOW_STOCK"
+                  ? "bg-rose-950/20 border-2 border-rose-500 shadow-xl shadow-rose-500/20 ring-2 ring-rose-500/30"
+                  : "bg-slate-900 border border-slate-800 hover:border-rose-500/60 hover:shadow-lg hover:shadow-rose-500/10"
+              }`}
+            >
               <div className="text-slate-400 text-xs font-bold flex items-center justify-between mb-2">
-                <span>ALERTAS STOCK CRÍTICO</span>
-                <AlertTriangle className="w-4 h-4 text-rose-400" />
+                <span className="group-hover:text-rose-400 transition-colors">ALERTAS STOCK CRÍTICO</span>
+                <AlertTriangle className={`w-4 h-4 text-rose-400 group-hover:scale-110 transition-transform ${activeKpiFilter === "LOW_STOCK" ? "animate-bounce" : ""}`} />
               </div>
               <div className="text-2xl sm:text-3xl font-black text-rose-400">{metrics.lowStockCount}</div>
               <p className="text-xs text-slate-500 mt-1">Repuestos con &le; 2 unidades</p>
-            </div>
+              <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-rose-400 font-medium">
+                <span>{activeKpiFilter === "LOW_STOCK" ? "Quitar filtro activo" : "Filtrar por stock crítico"}</span>
+                <span className="font-bold">{activeKpiFilter === "LOW_STOCK" ? "✕" : "↓"}</span>
+              </div>
+            </button>
 
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow">
+            {/* KPI 4: Tránsitos -> Click to open transfers modal and management */}
+            <button
+              type="button"
+              onClick={() => setIsTransfersModalOpen(true)}
+              className="group relative text-left bg-slate-900 border border-slate-800 hover:border-cyan-500/60 rounded-2xl p-5 shadow hover:shadow-lg hover:shadow-cyan-500/10 transition-all duration-200 transform hover:-translate-y-1 active:scale-[0.98]"
+            >
               <div className="text-slate-400 text-xs font-bold flex items-center justify-between mb-2">
-                <span>TRÁNSITOS ENTRE BODEGAS</span>
-                <ArrowRightLeft className="w-4 h-4 text-cyan-400" />
+                <span className="group-hover:text-cyan-400 transition-colors">TRÁNSITOS ENTRE BODEGAS</span>
+                <ArrowRightLeft className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
               </div>
               <div className="text-2xl sm:text-3xl font-black text-cyan-400">{transfers.length}</div>
               <p className="text-xs text-slate-500 mt-1">Traspasos registrados</p>
-            </div>
+              <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-cyan-400 font-medium">
+                <span>Ver traspasos y guías</span>
+                <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </button>
           </div>
 
           {/* Subtab 1: Inventory with Visual Photos Cards (Image 1 Style) */}
           {gerenciaSubTab === "inventario" && (
             <div className="space-y-4">
+              {/* Active Low Stock KPI Filter Banner */}
+              {activeKpiFilter === "LOW_STOCK" && (
+                <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-rose-300 shadow-lg shadow-rose-950/30 animate-in fade-in slide-in-from-top-2">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-rose-500/20 text-rose-400 shrink-0">
+                      <AlertTriangle className="w-5 h-5 animate-pulse" />
+                    </div>
+                    <div>
+                      <span className="font-bold text-white text-sm block">
+                        Filtro Activo: Repuestos con Stock Crítico (≤ 2 unidades)
+                      </span>
+                      <span className="text-xs text-rose-300/80">
+                        Mostrando {filteredProducts.length} repuestos que requieren reposición inmediata o compra.
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveKpiFilter("ALL");
+                        setToastMessage("Filtro de stock crítico desactivado.");
+                        setTimeout(() => setToastMessage(null), 2500);
+                      }}
+                      className="px-3.5 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs flex items-center gap-1.5 shadow active:scale-95 transition-all shrink-0"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      <span>Quitar filtro (Ver todos)</span>
+                    </button>
+                  </div>
+                </div>
+              )}
               {/* Controls: Location filter + Search + View Switcher (Cuadrícula con Fotos vs Lista) */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                 <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-semibold">
@@ -2047,6 +2229,327 @@ export default function SiffProposalDemo() {
                 Guardar Repuesto con Foto
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: DESGLOSE ANALÍTICO DE UNIDADES FÍSICAS EN STOCK (KPI 2) */}
+      {/* ========================================================================= */}
+      {isStockBreakdownOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-slate-900 border border-slate-700 w-full max-w-2xl rounded-3xl p-6 shadow-2xl relative my-8 animate-in fade-in zoom-in-95">
+            <button
+              onClick={() => setIsStockBreakdownOpen(false)}
+              className="absolute right-5 top-5 text-slate-400 hover:text-white bg-slate-800/60 p-2 rounded-full"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
+                <TrendingUp className="w-6 h-6" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+                  ANALÍTICA EN TIEMPO REAL
+                </span>
+                <h3 className="text-xl font-bold text-white">Balance Consolidado de Unidades Físicas</h3>
+                <p className="text-xs text-slate-400">
+                  Distribución exacta de las <strong>{metrics.totalStockUnits.toLocaleString()} existencias físicas</strong> registradas.
+                </p>
+              </div>
+            </div>
+
+            {/* Top 3 Location Summary Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-5">
+              <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800">
+                <div className="text-[11px] text-slate-400 uppercase font-semibold">Total Consolidado</div>
+                <div className="text-2xl font-black text-white mt-1">
+                  {metrics.totalStockUnits.toLocaleString()} <span className="text-xs font-normal text-slate-400">un.</span>
+                </div>
+                <div className="text-[10px] text-slate-500 mt-0.5">357 repuestos distintos</div>
+              </div>
+
+              <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800">
+                <div className="text-[11px] text-emerald-400 uppercase font-semibold flex items-center justify-between">
+                  <span>Bodega Central</span>
+                  <Warehouse className="w-3.5 h-3.5" />
+                </div>
+                <div className="text-2xl font-black text-emerald-400 mt-1">
+                  {stockBreakdown.bodegaUnits.toLocaleString()} <span className="text-xs font-normal text-slate-400">un.</span>
+                </div>
+                <div className="text-[10px] text-slate-500 mt-0.5">
+                  {Math.round((stockBreakdown.bodegaUnits / metrics.totalStockUnits) * 100)}% del volumen total
+                </div>
+              </div>
+
+              <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800">
+                <div className="text-[11px] text-cyan-400 uppercase font-semibold flex items-center justify-between">
+                  <span>Oficina Matriz</span>
+                  <Building2 className="w-3.5 h-3.5" />
+                </div>
+                <div className="text-2xl font-black text-cyan-400 mt-1">
+                  {stockBreakdown.oficinaUnits.toLocaleString()} <span className="text-xs font-normal text-slate-400">un.</span>
+                </div>
+                <div className="text-[10px] text-slate-500 mt-0.5">
+                  {Math.round((stockBreakdown.oficinaUnits / metrics.totalStockUnits) * 100)}% del volumen total
+                </div>
+              </div>
+            </div>
+
+            {/* Distribution by Category */}
+            <div className="mt-5 bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3">
+              <span className="text-xs font-bold text-slate-300 uppercase block tracking-wider">
+                Distribución Física por Categorías Técnicas
+              </span>
+              <div className="space-y-2.5">
+                {stockBreakdown.categoriesStats.map((cat) => (
+                  <div key={cat.name} className="space-y-1">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-slate-300 font-medium">{cat.name} ({cat.count} ítems)</span>
+                      <span className="font-mono font-bold text-white">
+                        {cat.units.toLocaleString()} un. <span className="text-emerald-400 text-[10px]">({cat.percentage}%)</span>
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                      <div
+                        className="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-500"
+                        style={{ width: `${cat.percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Top 5 high stock items */}
+            <div className="mt-4 bg-slate-950 p-4 rounded-2xl border border-slate-800">
+              <span className="text-xs font-bold text-slate-300 uppercase block tracking-wider mb-2">
+                Top 5 Repuestos con Mayor Volumen de Stock
+              </span>
+              <div className="divide-y divide-slate-800/80">
+                {stockBreakdown.topProducts.map((p) => (
+                  <div key={p.id} className="py-1.5 flex items-center justify-between text-xs">
+                    <div className="min-w-0 pr-2">
+                      <span className="font-mono text-cyan-400 font-bold mr-1.5">{p.code}</span>
+                      <span className="text-white truncate">{p.name}</span>
+                      <span className="text-[10px] text-slate-500 ml-1.5">({p.location})</span>
+                    </div>
+                    <span className="font-bold text-emerald-400 font-mono shrink-0">{p.stock} un.</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="mt-5 pt-3 border-t border-slate-800 flex flex-wrap gap-2 justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedLocation("Bodega Central");
+                  setIsStockBreakdownOpen(false);
+                  setGerenciaSubTab("inventario");
+                  setToastMessage("Filtrando: Solo Bodega Central");
+                  setTimeout(() => setToastMessage(null), 2500);
+                }}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200"
+              >
+                Filtrar Bodega Central
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedLocation("Oficina Matriz");
+                  setIsStockBreakdownOpen(false);
+                  setGerenciaSubTab("inventario");
+                  setToastMessage("Filtrando: Solo Oficina Matriz");
+                  setTimeout(() => setToastMessage(null), 2500);
+                }}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200"
+              >
+                Filtrar Oficina Matriz
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsStockBreakdownOpen(false)}
+                className="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold shadow"
+              >
+                Cerrar Balance
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: TRASPASOS EN TRÁNSITO ENTRE BODEGAS (KPI 4) */}
+      {/* ========================================================================= */}
+      {isTransfersModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-slate-900 border border-slate-700 w-full max-w-2xl rounded-3xl p-6 shadow-2xl relative my-8 animate-in fade-in zoom-in-95">
+            <button
+              onClick={() => setIsTransfersModalOpen(false)}
+              className="absolute right-5 top-5 text-slate-400 hover:text-white bg-slate-800/60 p-2 rounded-full"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
+              <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center shrink-0">
+                <ArrowRightLeft className="w-6 h-6" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-400">
+                  LOGÍSTICA INTERNA
+                </span>
+                <h3 className="text-xl font-bold text-white">Traspasos entre Bodega Central y Oficina Matriz</h3>
+                <p className="text-xs text-slate-400">
+                  Control de envíos de repuestos para evitar pérdidas durante el traslado entre sucursales.
+                </p>
+              </div>
+            </div>
+
+            {/* List of current transfers */}
+            <div className="mt-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                  Guías de Traspaso Activas ({transfers.length})
+                </span>
+                <span className="text-[11px] text-cyan-400 font-mono">
+                  {transfers.filter((t) => t.status === "EN TRÁNSITO").length} en camino
+                </span>
+              </div>
+
+              <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
+                {transfers.map((t) => (
+                  <div
+                    key={t.id}
+                    className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-slate-700 transition-all"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900 text-cyan-400 border border-slate-800">
+                          {t.id}
+                        </span>
+                        <span className="text-[11px] text-slate-400">{t.date}</span>
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            t.status === "EN TRÁNSITO"
+                              ? "bg-amber-500/10 text-amber-400 border border-amber-500/30 animate-pulse"
+                              : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                          }`}
+                        >
+                          {t.status}
+                        </span>
+                      </div>
+                      <div className="text-xs font-semibold text-white">
+                        {t.quantity}x {t.productName} <span className="text-cyan-400 font-mono">({t.productCode})</span>
+                      </div>
+                      <div className="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1.5">
+                        <span>{t.from}</span>
+                        <span className="text-cyan-400">→</span>
+                        <strong className="text-white">{t.to}</strong>
+                        <span className="text-slate-500">• Solicitado por: {t.requestedBy}</span>
+                      </div>
+                    </div>
+
+                    {t.status === "EN TRÁNSITO" && (
+                      <button
+                        type="button"
+                        onClick={() => handleConfirmTransferReceipt(t.id)}
+                        className="px-3.5 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs shadow active:scale-95 transition-all shrink-0 flex items-center gap-1.5"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Confirmar Llegada</span>
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick New Transfer Creator Form */}
+            <form onSubmit={handleCreateNewTransfer} className="mt-5 bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3">
+              <span className="text-xs font-bold text-amber-400 uppercase tracking-wider block">
+                + Despachar Nuevo Traspaso entre Almacenes
+              </span>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Repuesto a enviar:</label>
+                  <select
+                    value={newTransferProductCode}
+                    onChange={(e) => setNewTransferProductCode(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"
+                  >
+                    {products.slice(0, 35).map((p) => (
+                      <option key={p.id} value={p.code}>
+                        {p.code} - {p.name} (Stock: {p.stock} un. en {p.location})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Origen:</label>
+                    <select
+                      value={newTransferFrom}
+                      onChange={(e) => {
+                        const val = e.target.value as "Bodega Central" | "Oficina Matriz";
+                        setNewTransferFrom(val);
+                        setNewTransferTo(val === "Bodega Central" ? "Oficina Matriz" : "Bodega Central");
+                      }}
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"
+                    >
+                      <option value="Bodega Central">Bodega Central</option>
+                      <option value="Oficina Matriz">Oficina Matriz</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Destino:</label>
+                    <select
+                      value={newTransferTo}
+                      onChange={(e) => setNewTransferTo(e.target.value as any)}
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"
+                    >
+                      <option value="Oficina Matriz">Oficina Matriz</option>
+                      <option value="Bodega Central">Bodega Central</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1">Cantidad:</label>
+                    <input
+                      type="number"
+                      min={1}
+                      value={newTransferQty}
+                      onChange={(e) => setNewTransferQty(parseInt(e.target.value) || 1)}
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white text-center font-bold"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-slate-950 font-bold text-xs shadow transition-all active:scale-95"
+                >
+                  Generar Guía y Enviar Repuesto en Tránsito
+                </button>
+              </div>
+            </form>
+
+            <div className="mt-4 pt-3 border-t border-slate-800 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setIsTransfersModalOpen(false)}
+                className="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300"
+              >
+                Cerrar Ventana
+              </button>
+            </div>
           </div>
         </div>
       )}
