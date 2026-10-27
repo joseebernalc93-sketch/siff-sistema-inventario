@@ -560,9 +560,9 @@ export default function SiffProposalDemo() {
   // =========================================================================
   if (!currentUser) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between font-sans selection:bg-cyan-500 selection:text-black relative overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-600/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="min-h-screen bg-slate-100 text-slate-800 flex flex-col justify-between font-sans selection:bg-cyan-500 selection:text-white relative overflow-hidden">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
         <header className="p-6 max-w-7xl mx-auto w-full flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -570,30 +570,30 @@ export default function SiffProposalDemo() {
               SIFF
             </div>
             <div>
-              <span className="text-lg font-black tracking-tight text-white">
-                SIFF <span className="text-cyan-400 font-light">Refrigeración Industrial</span>
+              <span className="text-lg font-black tracking-tight text-slate-900">
+                SIFF <span className="text-cyan-600 font-medium">Refrigeración Industrial</span>
               </span>
-              <p className="text-[11px] text-slate-400">Sistema Centralizado de Inventario & Control de Salidas</p>
+              <p className="text-[11px] text-slate-500">Sistema Centralizado de Inventario & Control de Salidas</p>
             </div>
           </div>
-          <span className="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+          <span className="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-cyan-50 text-cyan-800 border border-cyan-200">
             <Sparkles className="w-3.5 h-3.5 mr-1.5" />
             Versión Demo Beta (357 Repuestos)
           </span>
         </header>
 
         <main className="flex-1 flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xl shadow-slate-200/60 relative">
             <div className="text-center mb-6">
-              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
                 Iniciar Sesión
               </h2>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 Selecciona tu perfil de acceso para ingresar al sistema
               </p>
             </div>
 
-            <div className="grid grid-cols-4 gap-1 bg-slate-950 p-1 rounded-2xl border border-slate-800 mb-6">
+            <div className="grid grid-cols-4 gap-1 bg-slate-100 p-1 rounded-2xl border border-slate-200 mb-6">
               <button
                 type="button"
                 onClick={() => {
@@ -622,8 +622,8 @@ export default function SiffProposalDemo() {
                 }}
                 className={`py-2 rounded-xl text-xs font-bold transition-all flex flex-col items-center gap-1 ${
                   selectedLoginTab === "bodega"
-                    ? "bg-cyan-500 text-slate-950 shadow"
-                    : "text-slate-400 hover:text-white"
+                    ? "bg-cyan-600 text-white shadow font-bold"
+                    : "text-slate-600 hover:text-slate-900"
                 }`}
               >
                 <span>📦</span>
@@ -640,8 +640,8 @@ export default function SiffProposalDemo() {
                 }}
                 className={`py-2 rounded-xl text-xs font-bold transition-all flex flex-col items-center gap-1 ${
                   selectedLoginTab === "tecnico"
-                    ? "bg-emerald-500 text-slate-950 shadow"
-                    : "text-slate-400 hover:text-white"
+                    ? "bg-emerald-600 text-white shadow font-bold"
+                    : "text-slate-600 hover:text-slate-900"
                 }`}
               >
                 <span>🛠️</span>
@@ -658,8 +658,8 @@ export default function SiffProposalDemo() {
                 }}
                 className={`py-2 rounded-xl text-xs font-bold transition-all flex flex-col items-center gap-1 ${
                   selectedLoginTab === "mostrador"
-                    ? "bg-blue-500 text-white shadow"
-                    : "text-slate-400 hover:text-white"
+                    ? "bg-blue-600 text-white shadow font-bold"
+                    : "text-slate-600 hover:text-slate-900"
                 }`}
               >
                 <span>🛒</span>
@@ -676,7 +676,7 @@ export default function SiffProposalDemo() {
 
             <form onSubmit={handleLoginSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
                   <span>Número de Cédula</span>
                   <span className="text-[10px] text-slate-500 font-mono">10 dígitos</span>
                 </label>
@@ -688,17 +688,17 @@ export default function SiffProposalDemo() {
                     value={cedulaInput}
                     onChange={(e) => setCedulaInput(e.target.value)}
                     placeholder="Ej: 0963671755"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500 font-mono tracking-wider"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-cyan-600 focus:ring-2 focus:ring-cyan-500/15 font-mono tracking-wider"
                   />
                 </div>
               </div>
 
               {selectedLoginTab === "gerencia" || selectedLoginTab === "mostrador" ? (
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
                     <span>Contraseña de Acceso</span>
                     {selectedLoginTab === "gerencia" && (
-                      <span className="text-[10px] text-amber-400 font-semibold">Clave: Gerencia123</span>
+                      <span className="text-[10px] text-amber-700 font-semibold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Clave: Gerencia123</span>
                     )}
                   </label>
                   <div className="relative">
@@ -709,12 +709,12 @@ export default function SiffProposalDemo() {
                       value={passwordInput}
                       onChange={(e) => setPasswordInput(e.target.value)}
                       placeholder="Contraseña"
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-10 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-10 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-cyan-600 focus:ring-2 focus:ring-cyan-500/15"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -722,9 +722,9 @@ export default function SiffProposalDemo() {
                 </div>
               ) : (
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
                     <span>PIN de Acceso Rápido</span>
-                    <span className="text-[10px] text-cyan-400">4 dígitos</span>
+                    <span className="text-[10px] text-cyan-700 font-semibold">4 dígitos</span>
                   </label>
                   <div className="relative">
                     <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -734,7 +734,7 @@ export default function SiffProposalDemo() {
                       value={pinInput}
                       onChange={(e) => setPinInput(e.target.value)}
                       placeholder="****"
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500 font-mono tracking-widest text-center"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-cyan-600 focus:ring-2 focus:ring-cyan-500/15 font-mono tracking-widest text-center"
                     />
                   </div>
                 </div>
@@ -748,36 +748,36 @@ export default function SiffProposalDemo() {
               </button>
             </form>
 
-            <div className="mt-6 pt-5 border-t border-slate-800">
-              <span className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider text-center mb-2.5">
+            <div className="mt-6 pt-5 border-t border-slate-200">
+              <span className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center mb-2.5">
                 ⚡ Acceso Directo de Demostración (1 clic):
               </span>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <button
                   type="button"
                   onClick={() => handleSwitchUser("gerencia")}
-                  className="p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-amber-500/30 text-amber-300 font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                  className="p-2 rounded-xl bg-amber-50 hover:bg-amber-100/80 border border-amber-300 text-amber-900 font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-xs"
                 >
                   <span>👑</span> Gerencia General
                 </button>
                 <button
                   type="button"
                   onClick={() => handleSwitchUser("bodega")}
-                  className="p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-cyan-500/30 text-cyan-300 font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                  className="p-2 rounded-xl bg-cyan-50 hover:bg-cyan-100/80 border border-cyan-300 text-cyan-900 font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-xs"
                 >
                   <span>📦</span> Jefe de Bodega
                 </button>
                 <button
                   type="button"
                   onClick={() => handleSwitchUser("tecnico")}
-                  className="p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-emerald-500/30 text-emerald-300 font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                  className="p-2 rounded-xl bg-emerald-50 hover:bg-emerald-100/80 border border-emerald-300 text-emerald-900 font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-xs"
                 >
                   <span>🛠️</span> Técnico (Celular)
                 </button>
                 <button
                   type="button"
                   onClick={() => handleSwitchUser("mostrador")}
-                  className="p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-blue-500/30 text-blue-300 font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                  className="p-2 rounded-xl bg-blue-50 hover:bg-blue-100/80 border border-blue-300 text-blue-900 font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-xs"
                 >
                   <span>🛒</span> Ventas Mostrador
                 </button>
@@ -786,7 +786,7 @@ export default function SiffProposalDemo() {
           </div>
         </main>
 
-        <footer className="p-4 text-center text-xs text-slate-600">
+        <footer className="p-4 text-center text-xs text-slate-500">
           SIFF Refrigeración Industrial
         </footer>
       </div>
@@ -797,9 +797,9 @@ export default function SiffProposalDemo() {
   // VIEW: AUTHENTICATED SYSTEM (Role-based Panel)
   // =========================================================================
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-cyan-500 selection:text-black">
+    <div className="min-h-screen bg-slate-100 text-slate-800 flex flex-col font-sans selection:bg-cyan-500 selection:text-white">
       {/* Top App Header - Cleaned without personal names or cédula */}
-      <header className="bg-slate-900 border-b border-slate-800 sticky top-0 z-40 shadow-xl backdrop-blur-md bg-slate-900/90">
+      <header className="bg-white/95 border-b border-slate-200 sticky top-0 z-40 shadow-xs backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 sm:h-20">
             {/* Logo and Clean Role Indicator */}
@@ -809,25 +809,25 @@ export default function SiffProposalDemo() {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-1.5">
-                    SIFF <span className="text-cyan-400 font-light">Inventario</span>
+                  <h1 className="text-base sm:text-lg font-bold tracking-tight text-slate-900 flex items-center gap-1.5">
+                    SIFF <span className="text-cyan-600 font-medium">Inventario</span>
                   </h1>
                   <span
                     className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${
                       currentUser.role === "gerencia"
-                        ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                        ? "bg-amber-50 text-amber-900 border-amber-300 font-bold"
                         : currentUser.role === "bodega"
-                        ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/30"
+                        ? "bg-cyan-50 text-cyan-900 border-cyan-300 font-bold"
                         : currentUser.role === "tecnico"
-                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
-                        : "bg-blue-500/10 text-blue-400 border-blue-500/30"
+                        ? "bg-emerald-50 text-emerald-900 border-emerald-300 font-bold"
+                        : "bg-blue-50 text-blue-900 border-blue-300 font-bold"
                     }`}
                   >
                     <span className="mr-1">{currentUser.avatar}</span>
                     {currentUser.role.toUpperCase()}
                   </span>
                 </div>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-500">
                   {currentUser.roleTitle}
                 </p>
               </div>
@@ -837,7 +837,7 @@ export default function SiffProposalDemo() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setCurrentUser(null)}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-all"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-semibold transition-all shadow-xs"
                 title="Cerrar Sesión"
               >
                 <LogOut className="w-3.5 h-3.5" />
@@ -850,12 +850,12 @@ export default function SiffProposalDemo() {
 
       {/* Floating Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 max-w-md bg-slate-900 border-2 border-emerald-500/60 rounded-xl p-4 shadow-2xl shadow-emerald-500/20 text-emerald-200 flex items-start gap-3 animate-in slide-in-from-bottom-5">
+        <div className="fixed bottom-6 right-6 z-50 max-w-md bg-white border-2 border-emerald-500 rounded-xl p-4 shadow-xl shadow-emerald-500/15 text-slate-900 flex items-start gap-3 animate-in slide-in-from-bottom-5">
           <CheckCircle2 className="w-6 h-6 text-emerald-400 shrink-0 mt-0.5" />
           <div className="flex-1">
             <p className="text-sm font-semibold">{toastMessage}</p>
           </div>
-          <button onClick={() => setToastMessage(null)} className="text-slate-400 hover:text-white">
+          <button onClick={() => setToastMessage(null)} className="text-slate-400 hover:text-slate-700">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -867,15 +867,15 @@ export default function SiffProposalDemo() {
       {currentUser.role === "gerencia" && (
         <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
           {/* Sub Navigation Bar - Perfectly Aligned without Ugly Scrollbar (Image 3 fix) */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-lg flex flex-wrap items-center justify-between gap-3">
+          <div className="bg-white border border-slate-200 rounded-2xl p-3 shadow-xs flex flex-wrap items-center justify-between gap-3">
             {/* Segmented control tabs */}
-            <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-bold">
+            <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold">
               <button
                 onClick={() => setGerenciaSubTab("inventario")}
                 className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg transition-all ${
                   gerenciaSubTab === "inventario"
-                    ? "bg-amber-500 text-slate-950 shadow"
-                    : "text-slate-400 hover:text-white"
+                    ? "bg-amber-500 text-slate-950 shadow-xs font-bold"
+                    : "text-slate-600 hover:text-slate-900"
                 }`}
               >
                 <Package className="w-3.5 h-3.5" />
@@ -885,8 +885,8 @@ export default function SiffProposalDemo() {
                 onClick={() => setGerenciaSubTab("kardex")}
                 className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg transition-all ${
                   gerenciaSubTab === "kardex"
-                    ? "bg-amber-500 text-slate-950 shadow"
-                    : "text-slate-400 hover:text-white"
+                    ? "bg-amber-500 text-slate-950 shadow-xs font-bold"
+                    : "text-slate-600 hover:text-slate-900"
                 }`}
               >
                 <Clock className="w-3.5 h-3.5" />
@@ -896,8 +896,8 @@ export default function SiffProposalDemo() {
                 onClick={() => setGerenciaSubTab("usuarios")}
                 className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg transition-all ${
                   gerenciaSubTab === "usuarios"
-                    ? "bg-amber-500 text-slate-950 shadow"
-                    : "text-slate-400 hover:text-white"
+                    ? "bg-amber-500 text-slate-950 shadow-xs font-bold"
+                    : "text-slate-600 hover:text-slate-900"
                 }`}
               >
                 <Users className="w-3.5 h-3.5" />
@@ -907,8 +907,8 @@ export default function SiffProposalDemo() {
                 onClick={() => setGerenciaSubTab("propuesta")}
                 className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg transition-all ${
                   gerenciaSubTab === "propuesta"
-                    ? "bg-cyan-500 text-slate-950 shadow"
-                    : "text-cyan-400 hover:text-cyan-300"
+                    ? "bg-cyan-600 text-white shadow-xs font-bold"
+                    : "text-cyan-700 hover:text-cyan-800"
                 }`}
               >
                 <FileText className="w-3.5 h-3.5" />
@@ -944,17 +944,17 @@ export default function SiffProposalDemo() {
               }}
               className={`group relative text-left rounded-2xl p-5 shadow transition-all duration-200 transform hover:-translate-y-1 active:scale-[0.98] ${
                 activeKpiFilter === "ALL" && selectedLocation === "TODAS" && selectedCategory === "TODAS" && !searchQuery
-                  ? "bg-slate-900 border-2 border-amber-500/70 shadow-lg shadow-amber-500/10 ring-2 ring-amber-500/20"
-                  : "bg-slate-900 border border-slate-800 hover:border-amber-500/50 hover:shadow-lg hover:shadow-amber-500/5"
+                  ? "bg-white border-2 border-amber-500 shadow-md ring-2 ring-amber-500/20"
+                  : "bg-white border border-slate-200 hover:border-amber-400 hover:shadow-md"
               }`}
             >
-              <div className="text-slate-400 text-xs font-bold flex items-center justify-between mb-2">
-                <span className="group-hover:text-amber-400 transition-colors">TOTAL REPUESTOS</span>
-                <Package className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
+              <div className="text-slate-500 text-xs font-bold flex items-center justify-between mb-2">
+                <span className="group-hover:text-amber-600 transition-colors">TOTAL REPUESTOS</span>
+                <Package className="w-4 h-4 text-amber-500 group-hover:scale-110 transition-transform" />
               </div>
-              <div className="text-2xl sm:text-3xl font-black text-white">{metrics.totalItems}</div>
+              <div className="text-2xl sm:text-3xl font-black text-slate-900">{metrics.totalItems}</div>
               <p className="text-xs text-slate-500 mt-1">Bodega ({metrics.bodegaCount}) • Oficina ({metrics.oficinaCount})</p>
-              <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-amber-400/90 font-medium">
+              <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-amber-600 font-medium">
                 <span>Ver catálogo completo</span>
                 <RefreshCw className="w-3 h-3 group-hover:rotate-180 transition-transform duration-500" />
               </div>
@@ -964,17 +964,17 @@ export default function SiffProposalDemo() {
             <button
               type="button"
               onClick={() => setIsStockBreakdownOpen(true)}
-              className="group relative text-left bg-slate-900 border border-slate-800 hover:border-emerald-500/60 rounded-2xl p-5 shadow hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-200 transform hover:-translate-y-1 active:scale-[0.98]"
+              className="group relative text-left bg-white border border-slate-200 hover:border-emerald-400 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-200 transform hover:-translate-y-1 active:scale-[0.98]"
             >
-              <div className="text-slate-400 text-xs font-bold flex items-center justify-between mb-2">
-                <span className="group-hover:text-emerald-400 transition-colors">TOTAL UNIDADES EN STOCK</span>
-                <TrendingUp className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
+              <div className="text-slate-500 text-xs font-bold flex items-center justify-between mb-2">
+                <span className="group-hover:text-emerald-600 transition-colors">TOTAL UNIDADES EN STOCK</span>
+                <TrendingUp className="w-4 h-4 text-emerald-600 group-hover:scale-110 transition-transform" />
               </div>
-              <div className="text-2xl sm:text-3xl font-black text-emerald-400">
+              <div className="text-2xl sm:text-3xl font-black text-emerald-600">
                 {metrics.totalStockUnits.toLocaleString()} un.
               </div>
               <p className="text-xs text-slate-500 mt-1">Existencias físicas consolidadas</p>
-              <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-emerald-400 font-medium">
+              <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-emerald-600 font-medium">
                 <span>Ver desglose por bodega</span>
                 <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
               </div>
@@ -996,17 +996,17 @@ export default function SiffProposalDemo() {
               }}
               className={`group relative text-left rounded-2xl p-5 shadow transition-all duration-200 transform hover:-translate-y-1 active:scale-[0.98] ${
                 activeKpiFilter === "LOW_STOCK"
-                  ? "bg-rose-950/20 border-2 border-rose-500 shadow-xl shadow-rose-500/20 ring-2 ring-rose-500/30"
-                  : "bg-slate-900 border border-slate-800 hover:border-rose-500/60 hover:shadow-lg hover:shadow-rose-500/10"
+                  ? "bg-rose-50 border-2 border-rose-500 shadow-md ring-2 ring-rose-500/20"
+                  : "bg-white border border-slate-200 hover:border-rose-400 hover:shadow-md"
               }`}
             >
-              <div className="text-slate-400 text-xs font-bold flex items-center justify-between mb-2">
-                <span className="group-hover:text-rose-400 transition-colors">ALERTAS STOCK CRÍTICO</span>
-                <AlertTriangle className={`w-4 h-4 text-rose-400 group-hover:scale-110 transition-transform ${activeKpiFilter === "LOW_STOCK" ? "animate-bounce" : ""}`} />
+              <div className="text-slate-500 text-xs font-bold flex items-center justify-between mb-2">
+                <span className="group-hover:text-rose-600 transition-colors">ALERTAS STOCK CRÍTICO</span>
+                <AlertTriangle className={`w-4 h-4 text-rose-500 group-hover:scale-110 transition-transform ${activeKpiFilter === "LOW_STOCK" ? "animate-bounce" : ""}`} />
               </div>
-              <div className="text-2xl sm:text-3xl font-black text-rose-400">{metrics.lowStockCount}</div>
+              <div className="text-2xl sm:text-3xl font-black text-rose-600">{metrics.lowStockCount}</div>
               <p className="text-xs text-slate-500 mt-1">Repuestos con &le; 2 unidades</p>
-              <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-rose-400 font-medium">
+              <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-rose-600 font-medium">
                 <span>{activeKpiFilter === "LOW_STOCK" ? "Quitar filtro activo" : "Filtrar por stock crítico"}</span>
                 <span className="font-bold">{activeKpiFilter === "LOW_STOCK" ? "✕" : "↓"}</span>
               </div>
@@ -1016,15 +1016,15 @@ export default function SiffProposalDemo() {
             <button
               type="button"
               onClick={() => setIsTransfersModalOpen(true)}
-              className="group relative text-left bg-slate-900 border border-slate-800 hover:border-cyan-500/60 rounded-2xl p-5 shadow hover:shadow-lg hover:shadow-cyan-500/10 transition-all duration-200 transform hover:-translate-y-1 active:scale-[0.98]"
+              className="group relative text-left bg-white border border-slate-200 hover:border-cyan-500 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-200 transform hover:-translate-y-1 active:scale-[0.98]"
             >
-              <div className="text-slate-400 text-xs font-bold flex items-center justify-between mb-2">
-                <span className="group-hover:text-cyan-400 transition-colors">TRÁNSITOS ENTRE BODEGAS</span>
-                <ArrowRightLeft className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
+              <div className="text-slate-500 text-xs font-bold flex items-center justify-between mb-2">
+                <span className="group-hover:text-cyan-700 transition-colors">TRÁNSITOS ENTRE BODEGAS</span>
+                <ArrowRightLeft className="w-4 h-4 text-cyan-600 group-hover:scale-110 transition-transform" />
               </div>
-              <div className="text-2xl sm:text-3xl font-black text-cyan-400">{transfers.length}</div>
+              <div className="text-2xl sm:text-3xl font-black text-cyan-700">{transfers.length}</div>
               <p className="text-xs text-slate-500 mt-1">Traspasos registrados</p>
-              <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-cyan-400 font-medium">
+              <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-cyan-700 font-medium">
                 <span>Ver traspasos y guías</span>
                 <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
               </div>
@@ -1036,16 +1036,16 @@ export default function SiffProposalDemo() {
             <div className="space-y-4">
               {/* Active Low Stock KPI Filter Banner */}
               {activeKpiFilter === "LOW_STOCK" && (
-                <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-rose-300 shadow-lg shadow-rose-950/30 animate-in fade-in slide-in-from-top-2">
+                <div className="bg-rose-50 border border-rose-200 rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-rose-900 shadow-sm animate-in fade-in slide-in-from-top-2">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-rose-500/20 text-rose-400 shrink-0">
+                    <div className="p-2 rounded-xl bg-rose-100 text-rose-600 shrink-0">
                       <AlertTriangle className="w-5 h-5 animate-pulse" />
                     </div>
                     <div>
-                      <span className="font-bold text-white text-sm block">
+                      <span className="font-bold text-rose-950 text-sm block">
                         Filtro Activo: Repuestos con Stock Crítico (≤ 2 unidades)
                       </span>
-                      <span className="text-xs text-rose-300/80">
+                      <span className="text-xs text-rose-700">
                         Mostrando {filteredProducts.length} repuestos que requieren reposición inmediata o compra.
                       </span>
                     </div>
@@ -1068,11 +1068,11 @@ export default function SiffProposalDemo() {
               )}
               {/* Controls: Location filter + Search + View Switcher (Cuadrícula con Fotos vs Lista) */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-semibold">
+                <div className="flex bg-slate-200/70 p-1 rounded-xl border border-slate-200 text-xs font-semibold">
                   <button
                     onClick={() => setSelectedLocation("TODAS")}
                     className={`px-3 py-1.5 rounded-lg transition-all ${
-                      selectedLocation === "TODAS" ? "bg-amber-500 text-slate-950 font-bold" : "text-slate-400 hover:text-white"
+                      selectedLocation === "TODAS" ? "bg-white text-slate-900 font-bold shadow-xs" : "text-slate-600 hover:text-slate-900"
                     }`}
                   >
                     Todo ({metrics.totalItems})
@@ -1080,7 +1080,7 @@ export default function SiffProposalDemo() {
                   <button
                     onClick={() => setSelectedLocation("Bodega Central")}
                     className={`px-3 py-1.5 rounded-lg transition-all ${
-                      selectedLocation === "Bodega Central" ? "bg-amber-500 text-slate-950 font-bold" : "text-slate-400 hover:text-white"
+                      selectedLocation === "Bodega Central" ? "bg-white text-slate-900 font-bold shadow-xs" : "text-slate-600 hover:text-slate-900"
                     }`}
                   >
                     Bodega ({metrics.bodegaCount})
@@ -1088,7 +1088,7 @@ export default function SiffProposalDemo() {
                   <button
                     onClick={() => setSelectedLocation("Oficina Matriz")}
                     className={`px-3 py-1.5 rounded-lg transition-all ${
-                      selectedLocation === "Oficina Matriz" ? "bg-amber-500 text-slate-950 font-bold" : "text-slate-400 hover:text-white"
+                      selectedLocation === "Oficina Matriz" ? "bg-white text-slate-900 font-bold shadow-xs" : "text-slate-600 hover:text-slate-900"
                     }`}
                   >
                     Oficina ({metrics.oficinaCount})
@@ -1103,18 +1103,18 @@ export default function SiffProposalDemo() {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Buscar por código, nombre o marca..."
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs sm:text-sm text-white focus:outline-none focus:border-amber-500"
+                      className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/15 shadow-xs"
                     />
                   </div>
 
                   {/* View Mode Switcher: Grid with photos vs Table (Like reference image 1) */}
-                  <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-800 shrink-0">
+                  <div className="flex bg-slate-200/70 p-1 rounded-xl border border-slate-200 shrink-0">
                     <button
                       onClick={() => setViewDisplayMode("grid")}
                       className={`p-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${
                         viewDisplayMode === "grid"
-                          ? "bg-amber-500 text-slate-950 shadow"
-                          : "text-slate-400 hover:text-white"
+                          ? "bg-white text-slate-900 shadow-xs font-bold"
+                          : "text-slate-600 hover:text-slate-900"
                       }`}
                       title="Vista Cuadrícula con Fotos"
                     >
@@ -1125,8 +1125,8 @@ export default function SiffProposalDemo() {
                       onClick={() => setViewDisplayMode("table")}
                       className={`p-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${
                         viewDisplayMode === "table"
-                          ? "bg-amber-500 text-slate-950 shadow"
-                          : "text-slate-400 hover:text-white"
+                          ? "bg-white text-slate-900 shadow-xs font-bold"
+                          : "text-slate-600 hover:text-slate-900"
                       }`}
                       title="Vista Lista Tabla"
                     >
@@ -1146,11 +1146,11 @@ export default function SiffProposalDemo() {
                     return (
                       <div
                         key={prod.id}
-                        className="bg-slate-900 border border-slate-800 hover:border-amber-500/60 rounded-2xl p-4 flex flex-col justify-between transition-all hover:shadow-xl hover:shadow-amber-500/5 group"
+                        className="bg-white border border-slate-200 hover:border-amber-400 rounded-2xl p-4 flex flex-col justify-between transition-all hover:shadow-lg hover:shadow-slate-200/60 group"
                       >
                         <div>
                           {/* Product Image Frame (Clean square photo container like in reference Image 1) */}
-                          <div className="w-full h-44 bg-slate-950 rounded-xl border border-slate-800/80 overflow-hidden relative mb-3 flex items-center justify-center p-2 group-hover:border-slate-700 transition-colors">
+                          <div className="w-full h-44 bg-slate-50 rounded-xl border border-slate-100 overflow-hidden relative mb-3 flex items-center justify-center p-2 group-hover:border-slate-200 transition-colors">
                             <img
                               src={imageUrl}
                               alt={prod.name}
@@ -1168,7 +1168,7 @@ export default function SiffProposalDemo() {
                             </div>
                             {/* Brand badge overlay */}
                             <div className="absolute bottom-2 left-2">
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-black/70 backdrop-blur-sm text-cyan-300 border border-white/10">
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white/95 text-slate-800 border border-slate-200 shadow-xs backdrop-blur-sm">
                                 {prod.brand}
                               </span>
                             </div>
@@ -1177,12 +1177,12 @@ export default function SiffProposalDemo() {
                           {/* Technical Details */}
                           <div>
                             <div className="flex items-center justify-between gap-1 mb-1">
-                              <span className="text-[11px] font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                              <span className="text-[11px] font-mono font-bold text-amber-900 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
                                 {prod.code}
                               </span>
                               <span className="text-[10px] font-mono text-slate-500">{prod.lot}</span>
                             </div>
-                            <h4 className="text-sm font-bold text-white line-clamp-2 leading-snug group-hover:text-amber-200 transition-colors">
+                            <h4 className="text-sm font-bold text-slate-900 line-clamp-2 leading-snug group-hover:text-amber-700 transition-colors">
                               {prod.name}
                             </h4>
                             <p className="text-[11px] text-slate-400 mt-1">{prod.category}</p>
@@ -1191,10 +1191,10 @@ export default function SiffProposalDemo() {
                         </div>
 
                         {/* Stock & Action Button without prices */}
-                        <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between">
+                        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
                           <div className="flex items-center gap-1.5">
                             <span className={`w-2 h-2 rounded-full ${isLow ? "bg-rose-500 animate-pulse" : "bg-emerald-400"}`}></span>
-                            <span className="text-xs text-slate-300 font-semibold">{prod.stock} un. disponibles</span>
+                            <span className="text-xs text-slate-600 font-semibold">{prod.stock} un. disponibles</span>
                           </div>
 
                           <button
@@ -1210,10 +1210,10 @@ export default function SiffProposalDemo() {
                 </div>
               ) : (
                 /* VIEW 2: TABLE VIEW */
-                <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow">
+                <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs sm:text-sm">
-                      <thead className="bg-slate-950 text-slate-400 uppercase text-[10px] tracking-wider font-semibold border-b border-slate-800">
+                      <thead className="bg-slate-50 text-slate-600 uppercase text-[10px] tracking-wider font-bold border-b border-slate-200">
                         <tr>
                           <th className="px-4 py-3">Foto</th>
                           <th className="px-4 py-3">Código</th>
@@ -1224,26 +1224,26 @@ export default function SiffProposalDemo() {
                           <th className="px-4 py-3 text-right">Acción</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-800/60">
+                      <tbody className="divide-y divide-slate-100">
                         {filteredProducts.slice(0, 25).map((prod) => {
                           const isLow = prod.stock <= prod.minStock;
                           const imageUrl = getProductImage(prod);
                           return (
-                            <tr key={prod.id} className="hover:bg-slate-800/40 transition-colors">
+                            <tr key={prod.id} className="hover:bg-slate-50/80 transition-colors">
                               <td className="px-4 py-2">
                                 <img
                                   src={imageUrl}
                                   alt={prod.name}
-                                  className="w-10 h-10 object-cover rounded-lg border border-slate-800"
+                                  className="w-10 h-10 object-cover rounded-lg border border-slate-200"
                                 />
                               </td>
-                              <td className="px-4 py-3 font-mono font-bold text-cyan-400">{prod.code}</td>
+                              <td className="px-4 py-3 font-mono font-bold text-cyan-700">{prod.code}</td>
                               <td className="px-4 py-3">
-                                <div className="font-semibold text-white">{prod.name}</div>
+                                <div className="font-semibold text-slate-900">{prod.name}</div>
                                 <div className="text-[11px] text-slate-400">{prod.category} • {prod.brand}</div>
                               </td>
                               <td className="px-4 py-3 font-mono text-slate-400">{prod.lot}</td>
-                              <td className="px-4 py-3 text-slate-300">{prod.location}</td>
+                              <td className="px-4 py-3 text-slate-600">{prod.location}</td>
                               <td className="px-4 py-3">
                                 <span
                                   className={`inline-flex items-center gap-1 font-bold text-xs px-2.5 py-0.5 rounded-full ${
@@ -1256,7 +1256,7 @@ export default function SiffProposalDemo() {
                               <td className="px-4 py-3 text-right">
                                 <button
                                   onClick={() => handleSelectProduct(prod)}
-                                  className="px-2.5 py-1 rounded-lg bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500 hover:text-slate-950 text-xs font-semibold transition-all"
+                                  className="px-2.5 py-1 rounded-lg bg-cyan-50 text-cyan-700 hover:bg-cyan-600 hover:text-white border border-cyan-200 text-xs font-semibold transition-all"
                                 >
                                   Mover
                                 </button>
@@ -1274,14 +1274,14 @@ export default function SiffProposalDemo() {
 
           {/* Subtab 2: Kardex Audit */}
           {gerenciaSubTab === "kardex" && (
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow space-y-4">
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
+            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
+              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
                 <Clock className="w-5 h-5 text-amber-400" />
                 Auditoría Total de Entradas y Salidas
               </h2>
-              <div className="overflow-x-auto rounded-xl border border-slate-800">
+              <div className="overflow-x-auto rounded-xl border border-slate-200">
                 <table className="w-full text-left text-xs sm:text-sm">
-                  <thead className="bg-slate-950 text-slate-400 font-semibold uppercase text-[10px] tracking-wider border-b border-slate-800">
+                  <thead className="bg-slate-50 text-slate-600 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200">
                     <tr>
                       <th className="px-4 py-3">Fecha</th>
                       <th className="px-4 py-3">Tipo</th>
@@ -1291,9 +1291,9 @@ export default function SiffProposalDemo() {
                       <th className="px-4 py-3">Responsable</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/80">
+                  <tbody className="divide-y divide-slate-100">
                     {movements.map((m) => (
-                      <tr key={m.id} className="hover:bg-slate-800/40">
+                      <tr key={m.id} className="hover:bg-slate-50/80">
                         <td className="px-4 py-3 font-mono text-xs text-slate-400">{m.timestamp}</td>
                         <td className="px-4 py-3">
                           <span
@@ -1305,15 +1305,15 @@ export default function SiffProposalDemo() {
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <div className="font-semibold text-white">{m.productName}</div>
-                          <div className="text-xs text-cyan-400 font-mono">{m.productCode}</div>
+                          <div className="font-semibold text-slate-900">{m.productName}</div>
+                          <div className="text-xs text-cyan-700 font-mono font-bold">{m.productCode}</div>
                         </td>
-                        <td className="px-4 py-3 text-slate-300">{m.location}</td>
+                        <td className="px-4 py-3 text-slate-600">{m.location}</td>
                         <td className="px-4 py-3">
-                          <div className="font-medium text-slate-200">{m.reason}</div>
+                          <div className="font-medium text-slate-800">{m.reason}</div>
                           {m.referenceDetail && <div className="text-xs text-slate-400 italic">"{m.referenceDetail}"</div>}
                         </td>
-                        <td className="px-4 py-3 text-slate-300">{m.technician}</td>
+                        <td className="px-4 py-3 text-slate-600">{m.technician}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1324,21 +1324,21 @@ export default function SiffProposalDemo() {
 
           {/* Subtab 3: Users and Roles Management */}
           {gerenciaSubTab === "usuarios" && (
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow space-y-4">
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
               <h2 className="text-base font-bold text-white flex items-center gap-2">
                 <Users className="w-5 h-5 text-amber-400" />
                 Personal Autorizado & Roles del Sistema
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {Object.values(PRESET_USERS).map((user) => (
-                  <div key={user.id} className="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-2xl shrink-0">
+                  <div key={user.id} className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-2xl shrink-0 shadow-xs">
                       {user.avatar}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
-                        <h4 className="text-sm font-bold text-white truncate">{user.name}</h4>
-                        <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-slate-900 text-cyan-400 border border-slate-800">
+                        <h4 className="text-sm font-bold text-slate-900 truncate">{user.name}</h4>
+                        <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-white text-cyan-800 border border-slate-200 shadow-xs">
                           {user.role}
                         </span>
                       </div>
@@ -1352,28 +1352,28 @@ export default function SiffProposalDemo() {
 
           {/* Subtab 4: Plan Propuesta Martes */}
           {gerenciaSubTab === "propuesta" && (
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
-              <div className="border-b border-slate-800 pb-4">
-                <span className="text-xs font-bold uppercase text-cyan-400 tracking-wider">RESUMEN EJECUTIVO</span>
-                <h2 className="text-2xl font-black text-white mt-1">Plan de Implementación en 2 Semanas</h2>
-                <p className="text-sm text-slate-400 mt-1">
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-6">
+              <div className="border-b border-slate-200 pb-4">
+                <span className="text-xs font-bold uppercase text-cyan-700 tracking-wider">RESUMEN EJECUTIVO</span>
+                <h2 className="text-2xl font-black text-slate-900 mt-1">Plan de Implementación en 2 Semanas</h2>
+                <p className="text-sm text-slate-600 mt-1">
                   Solución llave en mano para SIFF: catálogo visual con fotos, retiro rápido en 3 segundos y trazabilidad total.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
-                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                  <h4 className="font-bold text-amber-400 mb-2">Semana 1: Configuración y Datos</h4>
-                  <ul className="text-slate-400 space-y-1.5 text-xs">
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                  <h4 className="font-bold text-amber-700 mb-2">Semana 1: Configuración y Datos</h4>
+                  <ul className="text-slate-600 space-y-1.5 text-xs">
                     <li>• Carga y depuración de los 357 repuestos del Excel a Supabase.</li>
                     <li>• Configuración de los 4 roles de acceso (Gerencia, Bodega, Técnicos, Mostrador).</li>
                     <li>• Pruebas de escaneo con pistola lectora y cámara del teléfono.</li>
                   </ul>
                 </div>
 
-                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                  <h4 className="font-bold text-emerald-400 mb-2">Semana 2: Rotulación y Despliegue</h4>
-                  <ul className="text-slate-400 space-y-1.5 text-xs">
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                  <h4 className="font-bold text-emerald-700 mb-2">Semana 2: Rotulación y Despliegue</h4>
+                  <ul className="text-slate-600 space-y-1.5 text-xs">
                     <li>• Impresión de etiquetas QR para perchas y gavetas de Bodega y Oficina.</li>
                     <li>• Instalación de la PWA en los celulares de los técnicos.</li>
                     <li>• Capacitación virtual a gerencia y personal operativo.</li>
@@ -1390,14 +1390,14 @@ export default function SiffProposalDemo() {
       {/* ========================================================================= */}
       {currentUser.role === "bodega" && (
         <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900 border border-slate-800 rounded-2xl p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
             <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
               <button
                 onClick={() => setBodegaSubTab("perchas")}
                 className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
                   bodegaSubTab === "perchas"
-                    ? "bg-cyan-500 text-slate-950 shadow"
-                    : "text-slate-400 hover:text-white hover:bg-slate-800"
+                    ? "bg-cyan-600 text-white shadow-xs font-bold"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                 }`}
               >
                 <Warehouse className="w-4 h-4" />
@@ -1407,8 +1407,8 @@ export default function SiffProposalDemo() {
                 onClick={() => setBodegaSubTab("recepcion")}
                 className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
                   bodegaSubTab === "recepcion"
-                    ? "bg-cyan-500 text-slate-950 shadow"
-                    : "text-slate-400 hover:text-white hover:bg-slate-800"
+                    ? "bg-cyan-600 text-white shadow-xs font-bold"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                 }`}
               >
                 <Truck className="w-4 h-4" />
@@ -1418,8 +1418,8 @@ export default function SiffProposalDemo() {
                 onClick={() => setBodegaSubTab("traspasos")}
                 className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
                   bodegaSubTab === "traspasos"
-                    ? "bg-cyan-500 text-slate-950 shadow"
-                    : "text-slate-400 hover:text-white hover:bg-slate-800"
+                    ? "bg-cyan-600 text-white shadow-xs font-bold"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                 }`}
               >
                 <ArrowRightLeft className="w-4 h-4" />
@@ -1429,8 +1429,8 @@ export default function SiffProposalDemo() {
                 onClick={() => setBodegaSubTab("etiquetas")}
                 className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
                   bodegaSubTab === "etiquetas"
-                    ? "bg-cyan-500 text-slate-950 shadow"
-                    : "text-slate-400 hover:text-white hover:bg-slate-800"
+                    ? "bg-cyan-600 text-white shadow-xs font-bold"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                 }`}
               >
                 <QrCode className="w-4 h-4" />
@@ -1440,7 +1440,7 @@ export default function SiffProposalDemo() {
 
             <button
               onClick={() => setIsScannerOpen(true)}
-              className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow active:scale-95"
+              className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xs active:scale-95"
             >
               <Scan className="w-4 h-4" />
               Lector Láser / Escanear
@@ -1450,7 +1450,7 @@ export default function SiffProposalDemo() {
           {/* Bodega Subtab 1: Perchas Bodega con Fotos */}
           {bodegaSubTab === "perchas" && (
             <div className="space-y-4">
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center justify-between">
+              <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex items-center justify-between text-slate-600">
                 <span className="text-xs text-slate-400">
                   Inventario físico en <strong>Bodega Central</strong> con fotos para identificación rápida.
                 </span>
@@ -1467,10 +1467,10 @@ export default function SiffProposalDemo() {
                       <div
                         key={p.id}
                         onClick={() => handleSelectProduct(p)}
-                        className="bg-slate-900 border border-slate-800 hover:border-cyan-500 rounded-2xl p-4 cursor-pointer transition-all flex flex-col justify-between group"
+                        className="bg-white border border-slate-200 hover:border-cyan-500 rounded-2xl p-4 cursor-pointer transition-all flex flex-col justify-between group shadow-xs hover:shadow-md"
                       >
                         <div>
-                          <div className="w-full h-36 bg-slate-950 rounded-xl overflow-hidden mb-3 border border-slate-800">
+                          <div className="w-full h-36 bg-slate-50 rounded-xl overflow-hidden mb-3 border border-slate-100">
                             <img
                               src={imageUrl}
                               alt={p.name}
@@ -1481,10 +1481,10 @@ export default function SiffProposalDemo() {
                             <span className="text-cyan-400 font-bold">{p.code}</span>
                             <span>{p.lot}</span>
                           </div>
-                          <h4 className="text-sm font-semibold text-white line-clamp-2">{p.name}</h4>
+                          <h4 className="text-sm font-semibold text-slate-900 line-clamp-2">{p.name}</h4>
                         </div>
-                        <div className="mt-3 pt-2 border-t border-slate-800 flex justify-between items-center text-xs">
-                          <span className="text-slate-400">Stock: <strong className="text-white">{p.stock} un.</strong></span>
+                        <div className="mt-3 pt-2 border-t border-slate-100 flex justify-between items-center text-xs">
+                          <span className="text-slate-500">Stock: <strong className="text-slate-900">{p.stock} un.</strong></span>
                           <span className="text-cyan-400 font-bold">Despachar →</span>
                         </div>
                       </div>
@@ -1496,10 +1496,10 @@ export default function SiffProposalDemo() {
 
           {/* Bodega Subtab 2: Recepción Proveedores */}
           {bodegaSubTab === "recepcion" && (
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow max-w-xl mx-auto space-y-4">
-              <div className="border-b border-slate-800 pb-3">
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Truck className="w-5 h-5 text-cyan-400" />
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs max-w-xl mx-auto space-y-4">
+              <div className="border-b border-slate-200 pb-3">
+                <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <Truck className="w-5 h-5 text-cyan-600" />
                   Recepción de Mercadería por Compra
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">Ingresa los repuestos que llegan de proveedores a Bodega Central.</p>
@@ -1511,7 +1511,7 @@ export default function SiffProposalDemo() {
                   <select
                     value={receptionProductCode}
                     onChange={(e) => setReceptionProductCode(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-cyan-600"
                   >
                     {products.slice(0, 40).map((p) => (
                       <option key={p.id} value={p.code}>
@@ -1529,7 +1529,7 @@ export default function SiffProposalDemo() {
                       min={1}
                       value={receptionQty}
                       onChange={(e) => setReceptionQty(parseInt(e.target.value) || 1)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white text-center font-bold"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 text-center font-bold focus:bg-white focus:border-cyan-600"
                     />
                   </div>
                   <div>
@@ -1539,7 +1539,7 @@ export default function SiffProposalDemo() {
                       value={receptionDoc}
                       onChange={(e) => setReceptionDoc(e.target.value)}
                       placeholder="Ej: Guía #9942"
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:bg-white focus:border-cyan-600"
                     />
                   </div>
                 </div>
@@ -1551,7 +1551,7 @@ export default function SiffProposalDemo() {
                     value={receptionSupplier}
                     onChange={(e) => setReceptionSupplier(e.target.value)}
                     placeholder="Ej: Danfoss, Vilter, Mycom..."
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:bg-white focus:border-cyan-600"
                   />
                 </div>
 
@@ -1564,7 +1564,7 @@ export default function SiffProposalDemo() {
                     setToastMessage(`✅ Recepción registrada: +${receptionQty}x ${prod.name}`);
                     setTimeout(() => setToastMessage(null), 4000);
                   }}
-                  className="w-full py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-sm shadow transition-all"
+                  className="w-full py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-sm shadow-md transition-all"
                 >
                   Confirmar Ingreso a Bodega
                 </button>
@@ -1575,14 +1575,14 @@ export default function SiffProposalDemo() {
           {/* Bodega Subtab 3: Traspasos */}
           {bodegaSubTab === "traspasos" && (
             <div className="space-y-4">
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow space-y-4">
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <ArrowRightLeft className="w-5 h-5 text-cyan-400" />
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
+                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <ArrowRightLeft className="w-5 h-5 text-cyan-600" />
                   Traspasos Internos (Bodega Central ↔ Oficina Matriz)
                 </h3>
-                <div className="overflow-x-auto rounded-xl border border-slate-800">
+                <div className="overflow-x-auto rounded-xl border border-slate-200">
                   <table className="w-full text-left text-xs sm:text-sm">
-                    <thead className="bg-slate-950 text-slate-400 text-[10px] uppercase font-semibold">
+                    <thead className="bg-slate-50 text-slate-600 font-bold text-[10px] uppercase border-b border-slate-200">
                       <tr>
                         <th className="px-4 py-3">Fecha</th>
                         <th className="px-4 py-3">Repuesto</th>
@@ -1592,18 +1592,18 @@ export default function SiffProposalDemo() {
                         <th className="px-4 py-3">Solicitante</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/80">
+                    <tbody className="divide-y divide-slate-100">
                       {transfers.map((t) => (
-                        <tr key={t.id} className="hover:bg-slate-800/40">
+                        <tr key={t.id} className="hover:bg-slate-50/80">
                           <td className="px-4 py-3 text-slate-400 font-mono text-xs">{t.date}</td>
                           <td className="px-4 py-3">
-                            <span className="font-semibold text-white">{t.productName}</span>
-                            <span className="text-xs text-cyan-400 font-mono ml-2">({t.productCode})</span>
+                            <span className="font-semibold text-slate-900">{t.productName}</span>
+                            <span className="text-xs text-cyan-700 font-mono font-bold ml-2">({t.productCode})</span>
                           </td>
                           <td className="px-4 py-3 text-slate-300">
                             {t.from} → <strong className="text-cyan-400">{t.to}</strong>
                           </td>
-                          <td className="px-4 py-3 font-bold text-white">{t.quantity} un.</td>
+                          <td className="px-4 py-3 font-bold text-slate-900">{t.quantity} un.</td>
                           <td className="px-4 py-3">
                             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400">
                               {t.status}
@@ -1621,9 +1621,9 @@ export default function SiffProposalDemo() {
 
           {/* Bodega Subtab 4: Etiquetas */}
           {bodegaSubTab === "etiquetas" && (
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow space-y-4">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <QrCode className="w-5 h-5 text-cyan-400" />
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <QrCode className="w-5 h-5 text-cyan-600" />
                 Impresión de Etiquetas para Perchas y Gavetas
               </h3>
               <p className="text-xs text-slate-400">
@@ -1636,7 +1636,7 @@ export default function SiffProposalDemo() {
                     const p = products.find((x) => x.id === e.target.value);
                     if (p) setSelectedLabelProduct(p);
                   }}
-                  className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white"
+                  className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900 focus:bg-white focus:border-cyan-600"
                 >
                   {products.slice(0, 40).map((p) => (
                     <option key={p.id} value={p.id}>
@@ -1646,7 +1646,7 @@ export default function SiffProposalDemo() {
                 </select>
                 <button
                   onClick={() => window.print()}
-                  className="px-5 py-2.5 rounded-xl bg-cyan-500 text-slate-950 font-bold text-xs shadow flex items-center gap-1.5"
+                  className="px-5 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs shadow-md flex items-center gap-1.5"
                 >
                   <Printer className="w-4 h-4" /> Imprimir Etiqueta
                 </button>
@@ -1662,17 +1662,17 @@ export default function SiffProposalDemo() {
       {currentUser.role === "tecnico" && (
         <main className="flex-1 max-w-lg w-full mx-auto p-4 space-y-4">
           {/* Mobile Technician Header Card */}
-          <div className="bg-gradient-to-r from-emerald-950/60 via-slate-900 to-slate-900 border border-emerald-500/30 rounded-2xl p-4 shadow-lg flex items-center justify-between">
+          <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-white border border-emerald-200 rounded-2xl p-4 shadow-sm flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">
                 PANTALLA TÁCTIL CON FOTOS (RESTAURANTE)
               </span>
-              <h3 className="text-base font-bold text-white">Retiro Rápido para Servicios</h3>
-              <p className="text-xs text-slate-400">Toca la foto o usa el escáner de cámara</p>
+              <h3 className="text-base font-bold text-slate-900">Retiro Rápido para Servicios</h3>
+              <p className="text-xs text-slate-500">Toca la foto o usa el escáner de cámara</p>
             </div>
             <button
               onClick={() => setIsScannerOpen(true)}
-              className="p-3 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 shadow-lg shadow-emerald-500/25 active:scale-95 transition-all flex flex-col items-center gap-1"
+              className="p-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-md active:scale-95 transition-all flex flex-col items-center gap-1"
             >
               <Camera className="w-6 h-6" />
               <span className="text-[10px] font-black uppercase">Escanear</span>
@@ -1687,7 +1687,7 @@ export default function SiffProposalDemo() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar repuesto (Danfoss, Vilter, Válvula...)"
-              className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+              className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-500 shadow-xs"
             />
           </div>
 
@@ -1698,7 +1698,7 @@ export default function SiffProposalDemo() {
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
                 className={`whitespace-nowrap px-3 py-1.5 rounded-full font-medium transition-all ${
-                  selectedCategory === cat ? "bg-emerald-500 text-slate-950 font-bold" : "bg-slate-900 text-slate-400 border border-slate-800"
+                  selectedCategory === cat ? "bg-emerald-600 text-white font-bold shadow-xs" : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
                 }`}
               >
                 {cat}
@@ -1714,20 +1714,20 @@ export default function SiffProposalDemo() {
                 <div
                   key={prod.id}
                   onClick={() => handleSelectProduct(prod)}
-                  className="bg-slate-900 border border-slate-800 hover:border-emerald-500 rounded-2xl p-3 cursor-pointer flex flex-col justify-between active:scale-[0.98] transition-all shadow"
+                  className="bg-white border border-slate-200 hover:border-emerald-500 rounded-2xl p-3 cursor-pointer flex flex-col justify-between active:scale-[0.98] transition-all shadow-xs hover:shadow-md"
                 >
                   <div>
-                    <div className="w-full h-28 bg-slate-950 rounded-xl overflow-hidden mb-2 relative border border-slate-800">
+                    <div className="w-full h-28 bg-slate-50 rounded-xl overflow-hidden mb-2 relative border border-slate-100">
                       <img src={imageUrl} alt={prod.name} className="w-full h-full object-cover" />
                       <span className="absolute top-1.5 right-1.5 bg-emerald-500 text-slate-950 font-black text-[10px] px-1.5 py-0.5 rounded shadow">
                         {prod.stock} un.
                       </span>
                     </div>
-                    <span className="text-[10px] font-mono font-bold text-emerald-400">{prod.code}</span>
-                    <h4 className="text-xs font-bold text-white line-clamp-2 leading-tight mt-0.5">{prod.name}</h4>
+                    <span className="text-[10px] font-mono font-bold text-emerald-700">{prod.code}</span>
+                    <h4 className="text-xs font-bold text-slate-900 line-clamp-2 leading-tight mt-0.5">{prod.name}</h4>
                   </div>
 
-                  <button className="w-full py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-black text-xs mt-3 flex items-center justify-center gap-1">
+                  <button className="w-full py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs mt-3 flex items-center justify-center gap-1 shadow-xs">
                     <span>Retirar</span>
                     <ArrowDownLeft className="w-3.5 h-3.5" />
                   </button>
@@ -1743,18 +1743,18 @@ export default function SiffProposalDemo() {
       {/* ========================================================================= */}
       {currentUser.role === "mostrador" && (
         <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <span className="text-xs font-bold uppercase text-blue-400">MOSTRADOR & ATENCIÓN A CLIENTES</span>
-              <h2 className="text-lg font-bold text-white">Ventas Directas & Stock en Oficina Matriz</h2>
-              <p className="text-xs text-slate-400">Toca el repuesto con foto para registrar la venta de mostrador.</p>
+              <span className="text-xs font-bold uppercase text-blue-700">MOSTRADOR & ATENCIÓN A CLIENTES</span>
+              <h2 className="text-lg font-bold text-slate-900">Ventas Directas & Stock en Oficina Matriz</h2>
+              <p className="text-xs text-slate-500">Toca el repuesto con foto para registrar la venta de mostrador.</p>
             </div>
 
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setSelectedLocation("Oficina Matriz")}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${
-                  selectedLocation === "Oficina Matriz" ? "bg-blue-500 text-white font-bold" : "bg-slate-950 text-slate-400"
+                  selectedLocation === "Oficina Matriz" ? "bg-blue-600 text-white font-bold shadow-xs" : "bg-slate-100 text-slate-600 hover:text-slate-900"
                 }`}
               >
                 Oficina ({metrics.oficinaCount})
@@ -1762,7 +1762,7 @@ export default function SiffProposalDemo() {
               <button
                 onClick={() => setSelectedLocation("Bodega Central")}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${
-                  selectedLocation === "Bodega Central" ? "bg-blue-500 text-white font-bold" : "bg-slate-950 text-slate-400"
+                  selectedLocation === "Bodega Central" ? "bg-blue-600 text-white font-bold shadow-xs" : "bg-slate-100 text-slate-600 hover:text-slate-900"
                 }`}
               >
                 Consultar Bodega ({metrics.bodegaCount})
@@ -1777,21 +1777,21 @@ export default function SiffProposalDemo() {
                 <div
                   key={prod.id}
                   onClick={() => handleSelectProduct(prod)}
-                  className="bg-slate-900 border border-slate-800 hover:border-blue-500 rounded-2xl p-4 cursor-pointer transition-all flex flex-col justify-between group shadow"
+                  className="bg-white border border-slate-200 hover:border-blue-500 rounded-2xl p-4 cursor-pointer transition-all flex flex-col justify-between group shadow-xs hover:shadow-md"
                 >
                   <div>
-                    <div className="w-full h-36 bg-slate-950 rounded-xl overflow-hidden mb-3 border border-slate-800">
+                    <div className="w-full h-36 bg-slate-50 rounded-xl overflow-hidden mb-3 border border-slate-100">
                       <img src={imageUrl} alt={prod.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                     </div>
                     <div className="flex justify-between items-center text-xs font-mono mb-1">
-                      <span className="text-blue-400 font-bold">{prod.code}</span>
+                      <span className="text-blue-700 font-bold font-mono">{prod.code}</span>
                       <span className="text-slate-500">{prod.lot}</span>
                     </div>
-                    <h4 className="text-sm font-semibold text-white line-clamp-2">{prod.name}</h4>
+                    <h4 className="text-sm font-semibold text-slate-900 line-clamp-2">{prod.name}</h4>
                   </div>
-                  <div className="mt-3 pt-2 border-t border-slate-800 flex justify-between items-center text-xs">
-                    <span className="text-slate-400">Stock: <strong className="text-white">{prod.stock} un.</strong></span>
-                    <span className="text-blue-400 font-bold bg-blue-500/10 px-2 py-0.5 rounded">Vender →</span>
+                  <div className="mt-3 pt-2 border-t border-slate-100 flex justify-between items-center text-xs">
+                    <span className="text-slate-500">Stock: <strong className="text-slate-900">{prod.stock} un.</strong></span>
+                    <span className="text-blue-700 font-bold bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-lg">Vender →</span>
                   </div>
                 </div>
               );
@@ -1804,11 +1804,11 @@ export default function SiffProposalDemo() {
       {/* MODAL: REGISTRO DE MOVIMIENTO RÁPIDO CON FOTO ENCABEZADO */}
       {/* ========================================================================= */}
       {selectedProduct && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-slate-900 border border-slate-700 w-full max-w-lg rounded-3xl p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white border border-slate-200 w-full max-w-lg rounded-3xl p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200 text-slate-800">
             <button
               onClick={() => setSelectedProduct(null)}
-              className="absolute right-5 top-5 text-slate-400 hover:text-white bg-slate-800/60 p-2 rounded-full z-10"
+              className="absolute right-5 top-5 text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 p-2 rounded-full z-10 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -1818,26 +1818,26 @@ export default function SiffProposalDemo() {
               <img
                 src={getProductImage(selectedProduct)}
                 alt={selectedProduct.name}
-                className="w-20 h-20 object-cover rounded-2xl border border-slate-700 shrink-0 shadow"
+                className="w-20 h-20 object-cover rounded-2xl border border-slate-200 shrink-0 shadow-xs"
               />
               <div className="flex-1 min-w-0">
-                <span className="text-xs font-mono font-bold text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
+                <span className="text-xs font-mono font-bold text-cyan-800 bg-cyan-50 px-2 py-0.5 rounded border border-cyan-200">
                   {selectedProduct.code} • LOTE: {selectedProduct.lot}
                 </span>
-                <h3 className="text-base font-bold text-white mt-1 leading-snug line-clamp-2">
+                <h3 className="text-base font-bold text-slate-900 mt-1 leading-snug line-clamp-2">
                   {selectedProduct.name}
                 </h3>
                 <div className="flex items-center gap-2 text-xs text-slate-400 mt-1">
                   <span>{selectedProduct.location}</span>
                   <span>•</span>
-                  <span className="text-emerald-400 font-bold">{selectedProduct.stock} en stock</span>
+                  <span className="text-emerald-600 font-bold">{selectedProduct.stock} en stock</span>
                 </div>
               </div>
             </div>
 
             {/* Step 1: Type Selection */}
             <div className="mt-5">
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Paso 1: Tipo de Movimiento
               </label>
               <div className="grid grid-cols-2 gap-3">
@@ -1847,7 +1847,7 @@ export default function SiffProposalDemo() {
                   className={`flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all border ${
                     movementType === "SALIDA"
                       ? "bg-rose-500 text-white border-rose-400 shadow-lg shadow-rose-500/25 ring-2 ring-rose-500/50"
-                      : "bg-slate-950 text-slate-400 border-slate-800 hover:text-white"
+                      : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
                   }`}
                 >
                   <ArrowDownLeft className="w-4 h-4" />
@@ -1859,8 +1859,8 @@ export default function SiffProposalDemo() {
                   onClick={() => setMovementType("ENTRADA")}
                   className={`flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all border ${
                     movementType === "ENTRADA"
-                      ? "bg-emerald-500 text-slate-950 border-emerald-400 shadow-lg shadow-emerald-500/25 ring-2 ring-emerald-500/50"
-                      : "bg-slate-950 text-slate-400 border-slate-800 hover:text-white"
+                      ? "bg-emerald-600 text-white border-emerald-500 shadow-md ring-2 ring-emerald-500/25"
+                      : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
                   }`}
                 >
                   <ArrowUpRight className="w-4 h-4" />
@@ -1871,14 +1871,14 @@ export default function SiffProposalDemo() {
 
             {/* Step 2: Quantity Selector */}
             <div className="mt-5">
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                 Paso 2: Cantidad a {movementType === "SALIDA" ? "Retirar" : "Ingresar"}
               </label>
-              <div className="flex items-center gap-3 bg-slate-950 p-2 rounded-2xl border border-slate-800">
+              <div className="flex items-center gap-3 bg-slate-50 p-2 rounded-2xl border border-slate-200">
                 <button
                   type="button"
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-12 h-12 rounded-xl bg-slate-800 text-white text-xl font-black flex items-center justify-center active:scale-95"
+                  className="w-12 h-12 rounded-xl bg-white border border-slate-200 text-slate-800 hover:bg-slate-100 text-xl font-black flex items-center justify-center active:scale-95 shadow-xs"
                 >
                   -
                 </button>
@@ -1889,7 +1889,7 @@ export default function SiffProposalDemo() {
                     max={movementType === "SALIDA" ? selectedProduct.stock : 9999}
                     value={quantity}
                     onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-full bg-transparent text-center text-3xl font-black text-white focus:outline-none"
+                    className="w-full bg-transparent text-center text-3xl font-black text-slate-900 focus:outline-none"
                   />
                   <span className="text-[10px] text-slate-500 uppercase font-semibold">unidades</span>
                 </div>
@@ -1899,7 +1899,7 @@ export default function SiffProposalDemo() {
                     if (movementType === "SALIDA" && quantity >= selectedProduct.stock) return;
                     setQuantity(quantity + 1);
                   }}
-                  className="w-12 h-12 rounded-xl bg-slate-800 text-white text-xl font-black flex items-center justify-center active:scale-95"
+                  className="w-12 h-12 rounded-xl bg-white border border-slate-200 text-slate-800 hover:bg-slate-100 text-xl font-black flex items-center justify-center active:scale-95 shadow-xs"
                 >
                   +
                 </button>
@@ -1908,9 +1908,9 @@ export default function SiffProposalDemo() {
 
             {/* Step 3: Mandatory Reason */}
             <div className="mt-5">
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center justify-between">
                 <span>Paso 3: Motivo Obligatorio *</span>
-                <span className="text-cyan-400 font-normal lowercase text-[11px]">(registrado a tu nombre)</span>
+                <span className="text-cyan-700 font-semibold lowercase text-[11px]">(registrado a tu nombre)</span>
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {[
@@ -1926,8 +1926,8 @@ export default function SiffProposalDemo() {
                     onClick={() => setSelectedReason(reason)}
                     className={`p-2 rounded-xl border text-left text-xs font-medium transition-all ${
                       selectedReason === reason
-                        ? "bg-cyan-500/20 text-cyan-200 border-cyan-400 shadow-sm"
-                        : "bg-slate-950 text-slate-400 border-slate-800 hover:border-slate-700"
+                        ? "bg-cyan-50 text-cyan-900 border-cyan-400 font-bold shadow-xs"
+                        : "bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300"
                     }`}
                   >
                     {reason}
@@ -1941,24 +1941,24 @@ export default function SiffProposalDemo() {
                   value={referenceDetail}
                   onChange={(e) => setReferenceDetail(e.target.value)}
                   placeholder="Detalla obligatoriamente: Nombre de Cliente / Planta / N° Factura..."
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-cyan-600 focus:ring-2 focus:ring-cyan-500/15"
                 />
               </div>
             </div>
 
             {/* Footer */}
-            <div className="mt-6 pt-4 border-t border-slate-800 flex items-center gap-3">
+            <div className="mt-6 pt-4 border-t border-slate-200 flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => setSelectedProduct(null)}
-                className="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-sm transition-all"
+                className="flex-1 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-semibold text-sm transition-all"
               >
                 Cancelar
               </button>
               <button
                 type="button"
                 onClick={handleConfirmMovement}
-                className="flex-2 py-3 px-6 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-sm shadow-xl shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+                className="flex-2 py-3 px-6 rounded-xl bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-bold text-sm shadow-lg shadow-emerald-600/20 active:scale-95 transition-all flex items-center justify-center gap-2"
               >
                 <Check className="w-5 h-5" />
                 CONFIRMAR REGISTRO
@@ -1972,11 +1972,11 @@ export default function SiffProposalDemo() {
       {/* MODAL: SIMULADOR DE ESCÁNER DE CÁMARA */}
       {/* ========================================================================= */}
       {isScannerOpen && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-700 w-full max-w-md rounded-3xl p-6 shadow-2xl relative text-center">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 w-full max-w-md rounded-3xl p-6 shadow-2xl relative text-center text-slate-800">
             <button
               onClick={() => setIsScannerOpen(false)}
-              className="absolute right-5 top-5 text-slate-400 hover:text-white bg-slate-800/60 p-2 rounded-full"
+              className="absolute right-5 top-5 text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 p-2 rounded-full transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -1985,12 +1985,12 @@ export default function SiffProposalDemo() {
               <Camera className="w-6 h-6" />
             </div>
 
-            <h3 className="text-lg font-bold text-white">Escáner de Código QR y Barra</h3>
-            <p className="text-xs text-slate-400 mt-1">
+            <h3 className="text-lg font-bold text-slate-900">Escáner de Código QR y Barra</h3>
+            <p className="text-xs text-slate-500 mt-1">
               En celulares activa la cámara trasera; en la PC detecta el lector láser USB.
             </p>
 
-            <div className="mt-5 relative w-60 h-60 mx-auto bg-slate-950 rounded-2xl border-2 border-slate-800 overflow-hidden flex items-center justify-center shadow-inner">
+            <div className="mt-5 relative w-60 h-60 mx-auto bg-slate-950 rounded-2xl border-2 border-slate-300 overflow-hidden flex items-center justify-center shadow-inner">
               <div className="absolute top-4 left-4 w-8 h-8 border-t-4 border-l-4 border-cyan-400 rounded-tl"></div>
               <div className="absolute top-4 right-4 w-8 h-8 border-t-4 border-r-4 border-cyan-400 rounded-tr"></div>
               <div className="absolute bottom-4 left-4 w-8 h-8 border-b-4 border-l-4 border-cyan-400 rounded-bl"></div>
@@ -2003,7 +2003,7 @@ export default function SiffProposalDemo() {
               </div>
             </div>
 
-            <div className="mt-5 pt-4 border-t border-slate-800">
+            <div className="mt-5 pt-4 border-t border-slate-200">
               <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
                 Prueba rápida para la reunión del Martes:
               </span>
@@ -2011,7 +2011,7 @@ export default function SiffProposalDemo() {
                 <button
                   type="button"
                   onClick={() => handleApplySimulatedScan("AKS5898")}
-                  className="w-full py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-mono font-bold text-cyan-300 text-left flex items-center justify-between"
+                  className="w-full py-2.5 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-mono font-bold text-cyan-800 text-left flex items-center justify-between"
                 >
                   <span>[Escanear] AKS5898 - Válvula Danfoss</span>
                   <Scan className="w-4 h-4 text-cyan-400" />
@@ -2019,7 +2019,7 @@ export default function SiffProposalDemo() {
                 <button
                   type="button"
                   onClick={() => handleApplySimulatedScan("BOM5369")}
-                  className="w-full py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-mono font-bold text-cyan-300 text-left flex items-center justify-between"
+                  className="w-full py-2.5 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-mono font-bold text-cyan-800 text-left flex items-center justify-between"
                 >
                   <span>[Escanear] BOM5369 - Bomba Vilter</span>
                   <Scan className="w-4 h-4 text-cyan-400" />
@@ -2034,32 +2034,32 @@ export default function SiffProposalDemo() {
       {/* MODAL: CREAR NUEVO REPUESTO CON URL/FOTO (Solo Gerencia) */}
       {/* ========================================================================= */}
       {isAddProductOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-slate-900 border border-slate-700 w-full max-w-lg rounded-3xl p-6 shadow-2xl relative my-8 animate-in fade-in zoom-in-95">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white border border-slate-200 w-full max-w-lg rounded-3xl p-6 shadow-2xl relative my-8 animate-in fade-in zoom-in-95 text-slate-800">
             <button
               onClick={() => setIsAddProductOpen(false)}
-              className="absolute right-5 top-5 text-slate-400 hover:text-white bg-slate-800/60 p-2 rounded-full"
+              className="absolute right-5 top-5 text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 p-2 rounded-full transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <Plus className="w-5 h-5 text-amber-400" />
+            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <Plus className="w-5 h-5 text-amber-500" />
               Crear Nuevo Repuesto con Imagen
             </h3>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-slate-500 mt-1">
               Agrega una foto o URL de internet para que los técnicos reconozcan la pieza en pantalla táctil.
             </p>
 
             <form onSubmit={handleCreateProduct} className="space-y-3.5 mt-4">
               {/* Product Photo Box & URL Input */}
-              <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800">
-                <label className="block text-xs font-bold text-slate-300 uppercase mb-2 flex items-center justify-between">
+              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-2 flex items-center justify-between">
                   <span>Foto del Repuesto</span>
                   <span className="text-[10px] text-cyan-400 lowercase font-normal">(puedes pegar una URL de Google o usar predeterminada)</span>
                 </label>
                 <div className="flex items-center gap-3">
-                  <div className="w-20 h-20 bg-slate-900 rounded-xl border border-slate-700 overflow-hidden shrink-0 flex items-center justify-center">
+                  <div className="w-20 h-20 bg-white rounded-xl border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
                     <img
                       src={newImageUrl.trim() ? newImageUrl : CATEGORY_IMAGES[newCategory]}
                       alt="Vista previa"
@@ -2072,27 +2072,27 @@ export default function SiffProposalDemo() {
                       value={newImageUrl}
                       onChange={(e) => setNewImageUrl(e.target.value)}
                       placeholder="https://ejemplo.com/foto-valvula.jpg"
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500"
                     />
                     <div className="flex gap-1.5 flex-wrap">
                       <button
                         type="button"
                         onClick={() => setNewImageUrl(CATEGORY_IMAGES["Válvulas & Controles"])}
-                        className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700"
+                        className="text-[10px] px-2 py-0.5 rounded bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
                       >
                         Válvula
                       </button>
                       <button
                         type="button"
                         onClick={() => setNewImageUrl(CATEGORY_IMAGES["Bombas, Aceites & Filtros"])}
-                        className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700"
+                        className="text-[10px] px-2 py-0.5 rounded bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
                       >
                         Aceite / Bomba
                       </button>
                       <button
                         type="button"
                         onClick={() => setNewImageUrl(CATEGORY_IMAGES["Mecánica & Compresores"])}
-                        className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700"
+                        className="text-[10px] px-2 py-0.5 rounded bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
                       >
                         Compresor
                       </button>
@@ -2109,7 +2109,7 @@ export default function SiffProposalDemo() {
                   value={newCode}
                   onChange={(e) => setNewCode(e.target.value)}
                   placeholder="Ej: VAL9940"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono uppercase"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 font-mono uppercase focus:bg-white focus:border-amber-500"
                 />
               </div>
 
@@ -2121,7 +2121,7 @@ export default function SiffProposalDemo() {
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   placeholder="Ej: VÁLVULA DE EXPANSIÓN DANFOSS T2"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 uppercase focus:bg-white focus:border-amber-500"
                 />
               </div>
 
@@ -2131,7 +2131,7 @@ export default function SiffProposalDemo() {
                   <select
                     value={newCategory}
                     onChange={(e) => setNewCategory(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:bg-white focus:border-amber-500"
                   >
                     <option value="Válvulas & Controles">Válvulas & Controles</option>
                     <option value="Bombas, Aceites & Filtros">Bombas, Aceites & Filtros</option>
@@ -2147,7 +2147,7 @@ export default function SiffProposalDemo() {
                     value={newBrand}
                     onChange={(e) => setNewBrand(e.target.value)}
                     placeholder="Danfoss, Bitzer..."
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:bg-white focus:border-amber-500"
                   />
                 </div>
               </div>
@@ -2158,7 +2158,7 @@ export default function SiffProposalDemo() {
                   <select
                     value={newLocation}
                     onChange={(e) => setNewLocation(e.target.value as any)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:bg-white focus:border-amber-500"
                   >
                     <option value="Bodega Central">Bodega Central</option>
                     <option value="Oficina Matriz">Oficina Matriz</option>
@@ -2171,7 +2171,7 @@ export default function SiffProposalDemo() {
                     min={0}
                     value={newStock}
                     onChange={(e) => setNewStock(parseInt(e.target.value) || 0)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white text-center font-bold"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 text-center font-bold focus:bg-white focus:border-amber-500"
                   />
                 </div>
                 <div>
@@ -2181,7 +2181,7 @@ export default function SiffProposalDemo() {
                     value={newLot}
                     onChange={(e) => setNewLot(e.target.value)}
                     placeholder="LT035"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 font-mono focus:bg-white focus:border-amber-500"
                   />
                 </div>
               </div>
@@ -2201,16 +2201,16 @@ export default function SiffProposalDemo() {
       {/* MODAL: DESGLOSE ANALÍTICO DE UNIDADES FÍSICAS EN STOCK (KPI 2) */}
       {/* ========================================================================= */}
       {isStockBreakdownOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-slate-900 border border-slate-700 w-full max-w-2xl rounded-3xl p-6 shadow-2xl relative my-8 animate-in fade-in zoom-in-95">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white border border-slate-200 w-full max-w-2xl rounded-3xl p-6 shadow-2xl relative my-8 animate-in fade-in zoom-in-95 text-slate-800">
             <button
               onClick={() => setIsStockBreakdownOpen(false)}
-              className="absolute right-5 top-5 text-slate-400 hover:text-white bg-slate-800/60 p-2 rounded-full"
+              className="absolute right-5 top-5 text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 p-2 rounded-full transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
+            <div className="flex items-center gap-3 border-b border-slate-200 pb-4">
               <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
                 <TrendingUp className="w-6 h-6" />
               </div>
@@ -2218,7 +2218,7 @@ export default function SiffProposalDemo() {
                 <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
                   ANALÍTICA EN TIEMPO REAL
                 </span>
-                <h3 className="text-xl font-bold text-white">Balance Consolidado de Unidades Físicas</h3>
+                <h3 className="text-xl font-bold text-slate-900">Balance Consolidado de Unidades Físicas</h3>
                 <p className="text-xs text-slate-400">
                   Distribución exacta de las <strong>{metrics.totalStockUnits.toLocaleString()} existencias físicas</strong> registradas.
                 </p>
@@ -2227,16 +2227,16 @@ export default function SiffProposalDemo() {
 
             {/* Top 3 Location Summary Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-5">
-              <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800">
-                <div className="text-[11px] text-slate-400 uppercase font-semibold">Total Consolidado</div>
-                <div className="text-2xl font-black text-white mt-1">
+              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+                <div className="text-[11px] text-slate-500 uppercase font-semibold">Total Consolidado</div>
+                <div className="text-2xl font-black text-slate-900 mt-1">
                   {metrics.totalStockUnits.toLocaleString()} <span className="text-xs font-normal text-slate-400">un.</span>
                 </div>
                 <div className="text-[10px] text-slate-500 mt-0.5">357 repuestos distintos</div>
               </div>
 
-              <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800">
-                <div className="text-[11px] text-emerald-400 uppercase font-semibold flex items-center justify-between">
+              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+                <div className="text-[11px] text-emerald-700 uppercase font-semibold flex items-center justify-between">
                   <span>Bodega Central</span>
                   <Warehouse className="w-3.5 h-3.5" />
                 </div>
@@ -2248,8 +2248,8 @@ export default function SiffProposalDemo() {
                 </div>
               </div>
 
-              <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800">
-                <div className="text-[11px] text-cyan-400 uppercase font-semibold flex items-center justify-between">
+              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+                <div className="text-[11px] text-cyan-700 uppercase font-semibold flex items-center justify-between">
                   <span>Oficina Matriz</span>
                   <Building2 className="w-3.5 h-3.5" />
                 </div>
@@ -2263,20 +2263,20 @@ export default function SiffProposalDemo() {
             </div>
 
             {/* Distribution by Category */}
-            <div className="mt-5 bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3">
-              <span className="text-xs font-bold text-slate-300 uppercase block tracking-wider">
+            <div className="mt-5 bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+              <span className="text-xs font-bold text-slate-700 uppercase block tracking-wider">
                 Distribución Física por Categorías Técnicas
               </span>
               <div className="space-y-2.5">
                 {stockBreakdown.categoriesStats.map((cat) => (
                   <div key={cat.name} className="space-y-1">
                     <div className="flex justify-between items-center text-xs">
-                      <span className="text-slate-300 font-medium">{cat.name} ({cat.count} ítems)</span>
-                      <span className="font-mono font-bold text-white">
+                      <span className="text-slate-700 font-medium">{cat.name} ({cat.count} ítems)</span>
+                      <span className="font-mono font-bold text-slate-900">
                         {cat.units.toLocaleString()} un. <span className="text-emerald-400 text-[10px]">({cat.percentage}%)</span>
                       </span>
                     </div>
-                    <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                    <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
                       <div
                         className="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-500"
                         style={{ width: `${cat.percentage}%` }}
@@ -2288,16 +2288,16 @@ export default function SiffProposalDemo() {
             </div>
 
             {/* Top 5 high stock items */}
-            <div className="mt-4 bg-slate-950 p-4 rounded-2xl border border-slate-800">
-              <span className="text-xs font-bold text-slate-300 uppercase block tracking-wider mb-2">
+            <div className="mt-4 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+              <span className="text-xs font-bold text-slate-700 uppercase block tracking-wider mb-2">
                 Top 5 Repuestos con Mayor Volumen de Stock
               </span>
-              <div className="divide-y divide-slate-800/80">
+              <div className="divide-y divide-slate-200">
                 {stockBreakdown.topProducts.map((p) => (
                   <div key={p.id} className="py-1.5 flex items-center justify-between text-xs">
                     <div className="min-w-0 pr-2">
                       <span className="font-mono text-cyan-400 font-bold mr-1.5">{p.code}</span>
-                      <span className="text-white truncate">{p.name}</span>
+                      <span className="text-slate-900 truncate">{p.name}</span>
                       <span className="text-[10px] text-slate-500 ml-1.5">({p.location})</span>
                     </div>
                     <span className="font-bold text-emerald-400 font-mono shrink-0">{p.stock} un.</span>
@@ -2307,7 +2307,7 @@ export default function SiffProposalDemo() {
             </div>
 
             {/* Actions */}
-            <div className="mt-5 pt-3 border-t border-slate-800 flex flex-wrap gap-2 justify-end">
+            <div className="mt-5 pt-3 border-t border-slate-200 flex flex-wrap gap-2 justify-end">
               <button
                 type="button"
                 onClick={() => {
@@ -2317,7 +2317,7 @@ export default function SiffProposalDemo() {
                   setToastMessage("Filtrando: Solo Bodega Central");
                   setTimeout(() => setToastMessage(null), 2500);
                 }}
-                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200"
+                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-xs font-semibold text-slate-700"
               >
                 Filtrar Bodega Central
               </button>
@@ -2330,14 +2330,14 @@ export default function SiffProposalDemo() {
                   setToastMessage("Filtrando: Solo Oficina Matriz");
                   setTimeout(() => setToastMessage(null), 2500);
                 }}
-                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200"
+                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-xs font-semibold text-slate-700"
               >
                 Filtrar Oficina Matriz
               </button>
               <button
                 type="button"
                 onClick={() => setIsStockBreakdownOpen(false)}
-                className="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold shadow"
+                className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md"
               >
                 Cerrar Balance
               </button>
@@ -2350,16 +2350,16 @@ export default function SiffProposalDemo() {
       {/* MODAL: TRASPASOS EN TRÁNSITO ENTRE BODEGAS (KPI 4) */}
       {/* ========================================================================= */}
       {isTransfersModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-slate-900 border border-slate-700 w-full max-w-2xl rounded-3xl p-6 shadow-2xl relative my-8 animate-in fade-in zoom-in-95">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white border border-slate-200 w-full max-w-2xl rounded-3xl p-6 shadow-2xl relative my-8 animate-in fade-in zoom-in-95 text-slate-800">
             <button
               onClick={() => setIsTransfersModalOpen(false)}
-              className="absolute right-5 top-5 text-slate-400 hover:text-white bg-slate-800/60 p-2 rounded-full"
+              className="absolute right-5 top-5 text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 p-2 rounded-full transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
+            <div className="flex items-center gap-3 border-b border-slate-200 pb-4">
               <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center shrink-0">
                 <ArrowRightLeft className="w-6 h-6" />
               </div>
@@ -2367,7 +2367,7 @@ export default function SiffProposalDemo() {
                 <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-400">
                   LOGÍSTICA INTERNA
                 </span>
-                <h3 className="text-xl font-bold text-white">Traspasos entre Bodega Central y Oficina Matriz</h3>
+                <h3 className="text-xl font-bold text-slate-900">Traspasos entre Bodega Central y Oficina Matriz</h3>
                 <p className="text-xs text-slate-400">
                   Control de envíos de repuestos para evitar pérdidas durante el traslado entre sucursales.
                 </p>
@@ -2377,7 +2377,7 @@ export default function SiffProposalDemo() {
             {/* List of current transfers */}
             <div className="mt-5 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                   Guías de Traspaso Activas ({transfers.length})
                 </span>
                 <span className="text-[11px] text-cyan-400 font-mono">
@@ -2389,11 +2389,11 @@ export default function SiffProposalDemo() {
                 {transfers.map((t) => (
                   <div
                     key={t.id}
-                    className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-slate-700 transition-all"
+                    className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-slate-300 transition-all"
                   >
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900 text-cyan-400 border border-slate-800">
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white text-cyan-700 border border-slate-200">
                           {t.id}
                         </span>
                         <span className="text-[11px] text-slate-400">{t.date}</span>
@@ -2407,13 +2407,13 @@ export default function SiffProposalDemo() {
                           {t.status}
                         </span>
                       </div>
-                      <div className="text-xs font-semibold text-white">
+                      <div className="text-xs font-semibold text-slate-900">
                         {t.quantity}x {t.productName} <span className="text-cyan-400 font-mono">({t.productCode})</span>
                       </div>
                       <div className="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1.5">
                         <span>{t.from}</span>
                         <span className="text-cyan-400">→</span>
-                        <strong className="text-white">{t.to}</strong>
+                        <strong className="text-slate-900">{t.to}</strong>
                         <span className="text-slate-500">• Solicitado por: {t.requestedBy}</span>
                       </div>
                     </div>
@@ -2434,8 +2434,8 @@ export default function SiffProposalDemo() {
             </div>
 
             {/* Quick New Transfer Creator Form */}
-            <form onSubmit={handleCreateNewTransfer} className="mt-5 bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3">
-              <span className="text-xs font-bold text-amber-400 uppercase tracking-wider block">
+            <form onSubmit={handleCreateNewTransfer} className="mt-5 bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+              <span className="text-xs font-bold text-amber-800 uppercase tracking-wider block">
                 + Despachar Nuevo Traspaso entre Almacenes
               </span>
 
@@ -2445,7 +2445,7 @@ export default function SiffProposalDemo() {
                   <select
                     value={newTransferProductCode}
                     onChange={(e) => setNewTransferProductCode(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:border-cyan-600"
                   >
                     {products.slice(0, 35).map((p) => (
                       <option key={p.id} value={p.code}>
@@ -2465,7 +2465,7 @@ export default function SiffProposalDemo() {
                         setNewTransferFrom(val);
                         setNewTransferTo(val === "Bodega Central" ? "Oficina Matriz" : "Bodega Central");
                       }}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:border-cyan-600"
                     >
                       <option value="Bodega Central">Bodega Central</option>
                       <option value="Oficina Matriz">Oficina Matriz</option>
@@ -2477,7 +2477,7 @@ export default function SiffProposalDemo() {
                     <select
                       value={newTransferTo}
                       onChange={(e) => setNewTransferTo(e.target.value as any)}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:border-cyan-600"
                     >
                       <option value="Oficina Matriz">Oficina Matriz</option>
                       <option value="Bodega Central">Bodega Central</option>
@@ -2491,7 +2491,7 @@ export default function SiffProposalDemo() {
                       min={1}
                       value={newTransferQty}
                       onChange={(e) => setNewTransferQty(parseInt(e.target.value) || 1)}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white text-center font-bold"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 text-center font-bold focus:border-cyan-600"
                     />
                   </div>
                 </div>
@@ -2505,11 +2505,11 @@ export default function SiffProposalDemo() {
               </div>
             </form>
 
-            <div className="mt-4 pt-3 border-t border-slate-800 flex justify-end">
+            <div className="mt-4 pt-3 border-t border-slate-200 flex justify-end">
               <button
                 type="button"
                 onClick={() => setIsTransfersModalOpen(false)}
-                className="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300"
+                className="px-5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-xs font-bold text-slate-700"
               >
                 Cerrar Ventana
               </button>
