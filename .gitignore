@@ -29,3 +29,5 @@ scratch/
 .codex/
 *.diff
 patch*.py
+supabase/.temp/
+~$*

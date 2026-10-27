@@ -6,13 +6,17 @@ Incluye la **propuesta interactiva y prototipo funcional** para **SIFF** cargado
 
 ---
 
-## 🚀 Prototipo Interactivo en Vivo
+## 🚀 Despliegue en Vivo en Vercel & Supabase
 
-Abre en tu navegador:
+* **Aplicación en Producción (Vercel):** [https://siff-sistema-inventario.vercel.app/siff](https://siff-sistema-inventario.vercel.app/siff)
+* **Página Principal:** [https://siff-sistema-inventario.vercel.app](https://siff-sistema-inventario.vercel.app)
+* **Base de Datos en Producción (Supabase):** Proyecto `siff-sistema-inventario` (`kccralrgjvpgnprodhay`) en `joseebernalc93-sketch's Org`.
+* **357 Repuestos SIFF:** Sincronizados y disponibles en PostgreSQL en la nube.
+
+Para pruebas en desarrollo local:
 ```txt
 http://localhost:3000/siff
 ```
-*(O accede desde la ruta principal `http://localhost:3000` con el banner superior directo a la propuesta).*
 
 ---
 
