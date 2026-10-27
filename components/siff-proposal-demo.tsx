@@ -204,7 +204,17 @@ function parseSiffWorkbook(wb: XLSX.WorkBook): ExtendedProduct[] {
     const headers = rows[headerIdx].map((h) => String(h || "").trim().toUpperCase());
 
     const codeIdx = headers.findIndex((h) => h.includes("CÓDIGO") || h.includes("CODIGO"));
-    const nameIdx = headers.findIndex((h) => h.includes("DESCRIPCI") || h.includes("NOMBRE") || h.includes("PRODUCTO"));
+    let nameIdx = headers.findIndex(
+      (h, idx) =>
+        idx !== codeIdx &&
+        (h.includes("DESCRIPCI") ||
+          h.includes("NOMBRE") ||
+          h.includes("DETALLE") ||
+          (h.includes("PRODUCTO") && !h.includes("CÓDIGO") && !h.includes("CODIGO")))
+    );
+    if ((nameIdx === -1 || nameIdx === codeIdx) && headers.length > 1) {
+      nameIdx = codeIdx === 0 ? 1 : 0;
+    }
     const lotIdx = headers.findIndex((h) => h.includes("LOTE"));
     const stockIdx = headers.findIndex((h) => h.includes("STOCK"));
     const entradasIdx = headers.findIndex((h) => h.includes("ENTRADAS"));
