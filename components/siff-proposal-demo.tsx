@@ -786,8 +786,8 @@ export default function SiffProposalDemo() {
           </div>
         </main>
 
-        <footer className="p-4 text-center text-xs text-slate-500">
-          Prototipo de Titulación y Propuesta Comercial • SIFF Refrigeración Industrial
+        <footer className="p-4 text-center text-xs text-slate-600">
+          SIFF Refrigeración Industrial
         </footer>
       </div>
     );
