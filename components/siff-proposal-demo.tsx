@@ -48,7 +48,11 @@ import {
   Image as ImageIcon,
   ExternalLink,
   ArrowRight,
-  RefreshCw
+  RefreshCw,
+  ChevronDown,
+  ChevronUp,
+  Pencil,
+  FileCheck
 } from "lucide-react";
 import * as XLSX from "xlsx-js-style";
 import { SIFF_PRODUCTS_DATA, SiffProduct } from "@/lib/siff-products";
@@ -116,8 +120,13 @@ const CATEGORY_IMAGES: Record<string, string> = {
 };
 
 export function getProductImage(product: SiffProduct & { imageUrl?: string }): string {
-  if (product.imageUrl && product.imageUrl.trim() !== "") {
-    return product.imageUrl;
+  if (product.imageUrl !== undefined && product.imageUrl !== null) {
+    if (product.imageUrl === "NO_IMAGE") {
+      return "";
+    }
+    if (product.imageUrl.trim() !== "") {
+      return product.imageUrl;
+    }
   }
   return CATEGORY_IMAGES[product.category] || CATEGORY_IMAGES["Válvulas & Controles"];
 }
@@ -278,16 +287,24 @@ interface ExtendedProduct extends SiffProduct {
 
 interface MovementRecord {
   id: string;
+  folio: string;
   timestamp: string;
+  fullDate: string;
   productCode: string;
   productName: string;
   location: string;
   type: "SALIDA" | "ENTRADA";
   quantity: number;
+  previousStock: number;
+  resultingStock: number;
   lot: string;
   reason: string;
   referenceDetail?: string;
   technician: string;
+  technicianRole?: string;
+  deviceMethod?: string;
+  documentRef?: string;
+  notes?: string;
 }
 
 interface TransferRecord {
@@ -330,55 +347,87 @@ const INITIAL_TRANSFERS: TransferRecord[] = [
 const INITIAL_MOVEMENTS: MovementRecord[] = [
   {
     id: "mov-1",
+    folio: "KDX-2026-0042",
     timestamp: "Hoy, 10:42 AM",
+    fullDate: "27/10/2026 - 10:42:15 AM",
     productCode: "AKS5898",
     productName: "AKS - 38 DANFOSS",
     location: "Bodega Central",
     type: "SALIDA",
     quantity: 1,
+    previousStock: 5,
+    resultingStock: 4,
     lot: "LT032",
     reason: "Servicio Técnico a Cliente",
     referenceDetail: "Pesquera Mar del Sur - Mantenimiento Compresor 2",
-    technician: "Técnico de Campo"
+    technician: "Técnico Especialista",
+    technicianRole: "Servicios Técnicos & Reparaciones en Campo",
+    deviceMethod: "Cámara Smartphone PWA (Escaneo QR)",
+    documentRef: "Orden de Trabajo #OT-2026-8812",
+    notes: "Retiro para mantenimiento correctivo urgente en planta pesquera."
   },
   {
     id: "mov-2",
+    folio: "KDX-2026-0041",
     timestamp: "Hoy, 09:15 AM",
+    fullDate: "27/10/2026 - 09:15:30 AM",
     productCode: "BOM5369",
     productName: "BOMBA DE ACEITE ORIGINAL VILTER",
     location: "Bodega Central",
     type: "SALIDA",
     quantity: 1,
+    previousStock: 2,
+    resultingStock: 1,
     lot: "LT029",
     reason: "Venta Mostrador",
     referenceDetail: "Factura N° 001-002-4521",
-    technician: "Jefe de Bodega"
+    technician: "Jefe de Bodega",
+    technicianRole: "Custodia Física & Logística",
+    deviceMethod: "Lector Barcode Pistola USB",
+    documentRef: "Factura Comercial #001-002-4521",
+    notes: "Despacho directo con verificación física de empaque original."
   },
   {
     id: "mov-3",
+    folio: "KDX-2026-0040",
     timestamp: "Ayer, 04:30 PM",
+    fullDate: "26/10/2026 - 04:30:00 PM",
     productCode: "ACE5123",
     productName: "ACEITE BITZER 10 LTS",
     location: "Oficina Matriz",
     type: "ENTRADA",
     quantity: 5,
+    previousStock: 15,
+    resultingStock: 20,
     lot: "LT028",
     reason: "Recepción de Proveedor",
     referenceDetail: "Guía Remisión Proveedor Danfoss/Bitzer #8841",
-    technician: "Jefe de Bodega"
+    technician: "Jefe de Bodega",
+    technicianRole: "Custodia Física & Logística",
+    deviceMethod: "Pantalla Táctil POS",
+    documentRef: "Guía Remisión Proveedor #8841",
+    notes: "Ingreso verificado por compra internacional de lubricante sintético."
   },
   {
     id: "mov-4",
+    folio: "KDX-2026-0039",
     timestamp: "Ayer, 02:10 PM",
+    fullDate: "26/10/2026 - 02:10:22 PM",
     productCode: "SEL6176",
     productName: "SELLO MECÁNICO 440 KT508",
     location: "Bodega Central",
     type: "SALIDA",
     quantity: 2,
+    previousStock: 10,
+    resultingStock: 8,
     lot: "LT003",
     reason: "Traspaso Interno",
     referenceDetail: "Envío a Oficina Matriz para exhibición",
-    technician: "Jefe de Bodega"
+    technician: "Jefe de Bodega",
+    technicianRole: "Custodia Física & Logística",
+    deviceMethod: "Lector Barcode Pistola USB",
+    documentRef: "Guía Interna de Traspaso #TRF-101",
+    notes: "Movimiento interno entre sedes para stock de mostrador matriz."
   }
 ];
 
@@ -449,6 +498,25 @@ export default function SiffProposalDemo() {
   const [newCategory, setNewCategory] = useState<string>("Válvulas & Controles");
   const [newBrand, setNewBrand] = useState<string>("Danfoss");
   const [newImageUrl, setNewImageUrl] = useState<string>("");
+
+  // Edit Product State (Gerencia)
+  const [editingProduct, setEditingProduct] = useState<ExtendedProduct | null>(null);
+  const [isEditProductOpen, setIsEditProductOpen] = useState<boolean>(false);
+  const [editName, setEditName] = useState<string>("");
+  const [editCode, setEditCode] = useState<string>("");
+  const [editLot, setEditLot] = useState<string>("");
+  const [editLocation, setEditLocation] = useState<"Bodega Central" | "Oficina Matriz">("Bodega Central");
+  const [editStock, setEditStock] = useState<number>(0);
+  const [editMinStock, setEditMinStock] = useState<number>(2);
+  const [editCategory, setEditCategory] = useState<string>("Válvulas & Controles");
+  const [editBrand, setEditBrand] = useState<string>("Danfoss");
+  const [editImageUrl, setEditImageUrl] = useState<string>("");
+
+  // Kardex Expansion, Filtering & Voucher Modal State
+  const [expandedMovements, setExpandedMovements] = useState<Record<string, boolean>>({ "mov-1": true });
+  const [kardexSearchQuery, setKardexSearchQuery] = useState<string>("");
+  const [kardexFilterType, setKardexFilterType] = useState<"TODOS" | "SALIDA" | "ENTRADA">("TODOS");
+  const [selectedVoucherMovement, setSelectedVoucherMovement] = useState<MovementRecord | null>(null);
 
   // Interactive KPI Card Filters & Modals
   const [activeKpiFilter, setActiveKpiFilter] = useState<"ALL" | "LOW_STOCK">("ALL");
@@ -714,24 +782,36 @@ export default function SiffProposalDemo() {
       return;
     }
 
-    const newStock = movementType === "SALIDA" ? selectedProduct.stock - quantity : selectedProduct.stock + quantity;
+    const prevStock = selectedProduct.stock;
+    const newStock = movementType === "SALIDA" ? prevStock - quantity : prevStock + quantity;
 
     setProducts((prev) =>
       prev.map((item) => (item.id === selectedProduct.id ? { ...item, stock: newStock } : item))
     );
 
+    const now = new Date();
+    const dateFormatted = `${now.toLocaleDateString("es-EC")} - ${now.toLocaleTimeString("es-EC", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
+
     const newMovement: MovementRecord = {
       id: "mov-" + Date.now(),
+      folio: `KDX-2026-${String(movements.length + 43).padStart(4, "0")}`,
       timestamp: "Hace unos segundos",
+      fullDate: dateFormatted,
       productCode: selectedProduct.code,
       productName: selectedProduct.name,
       location: selectedProduct.location,
       type: movementType,
       quantity,
+      previousStock: prevStock,
+      resultingStock: newStock,
       lot: selectedProduct.lot,
       reason: selectedReason,
       referenceDetail: referenceDetail.trim() ? referenceDetail : undefined,
-      technician: currentUser.name
+      technician: currentUser.name,
+      technicianRole: currentUser.roleTitle,
+      deviceMethod: isScannerOpen ? "Cámara Smartphone PWA (Escaneo QR)" : "Pantalla Táctil POS",
+      documentRef: referenceDetail.trim() || "Vale Interno de Movimiento",
+      notes: `Movimiento auditado y registrado con éxito por ${currentUser.name}.`
     };
 
     setMovements((prev) => [newMovement, ...prev]);
@@ -804,6 +884,254 @@ export default function SiffProposalDemo() {
     setToastMessage(`✅ Repuesto creado con foto: ${created.code} - ${created.name}`);
     setTimeout(() => setToastMessage(null), 4000);
   };
+
+  // Open edit modal for a product
+  const handleOpenEditProduct = (product: ExtendedProduct) => {
+    setEditingProduct(product);
+    setEditName(product.name);
+    setEditCode(product.code);
+    setEditLot(product.lot);
+    setEditLocation(product.location);
+    setEditStock(product.stock);
+    setEditMinStock(product.minStock || 2);
+    setEditCategory(product.category);
+    setEditBrand(product.brand);
+    setEditImageUrl(product.imageUrl || "");
+    setIsEditProductOpen(true);
+  };
+
+  // Save edited product
+  const handleSaveEditProduct = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProduct) return;
+    if (!editName.trim() || !editCode.trim()) {
+      alert("El nombre y código no pueden estar vacíos.");
+      return;
+    }
+
+    const updated: ExtendedProduct = {
+      ...editingProduct,
+      name: editName.trim().toUpperCase(),
+      code: editCode.trim().toUpperCase(),
+      lot: editLot.trim().toUpperCase() || "LT001",
+      location: editLocation,
+      stock: Number(editStock) >= 0 ? Number(editStock) : 0,
+      minStock: Number(editMinStock) >= 0 ? Number(editMinStock) : 2,
+      category: editCategory,
+      brand: editBrand.trim() || "Multimarca / OEM",
+      imageUrl: editImageUrl
+    };
+
+    setProducts((prev) =>
+      prev.map((p) => (p.id === editingProduct.id ? updated : p))
+    );
+
+    setIsEditProductOpen(false);
+    setEditingProduct(null);
+    setToastMessage(`✅ Repuesto ${updated.code} actualizado correctamente.`);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  // Delete product from inventory
+  const handleDeleteProduct = (productId: string) => {
+    const found = products.find((p) => p.id === productId);
+    if (!found) return;
+    if (confirm(`¿Estás seguro de eliminar el repuesto "${found.code} - ${found.name}" del catálogo?`)) {
+      setProducts((prev) => prev.filter((p) => p.id !== productId));
+      setIsEditProductOpen(false);
+      setEditingProduct(null);
+      setToastMessage(`🗑️ Repuesto ${found.code} eliminado.`);
+      setTimeout(() => setToastMessage(null), 3500);
+    }
+  };
+
+  // Export full inventory to Excel matching SIFF format
+  const handleExportInventoryExcel = () => {
+    try {
+      const wb = XLSX.utils.book_new();
+
+      // Sheet 1: CONSOLIDADO
+      const consolidadoHeaders = [
+        "CÓDIGO PRODUCTO",
+        "DESCRIPCIÓN TÉCNICA",
+        "CATEGORÍA",
+        "MARCA",
+        "UBICACIÓN",
+        "LOTE",
+        "TOTAL PRODUCTO (STOCK)",
+        "STOCK MÍNIMO",
+        "ESTADO STOCK"
+      ];
+      const consolidadoRows = products.map((p) => [
+        p.code,
+        p.name,
+        p.category,
+        p.brand,
+        p.location,
+        p.lot,
+        p.stock,
+        p.minStock || 2,
+        p.stock <= (p.minStock || 2) ? "STOCK CRÍTICO" : "ÓPTIMO"
+      ]);
+      const wsConsolidado = XLSX.utils.aoa_to_sheet([consolidadoHeaders, ...consolidadoRows]);
+      XLSX.utils.book_append_sheet(wb, wsConsolidado, "INVENTARIO CONSOLIDADO");
+
+      // Sheet 2: INVENTARIOBODEGA
+      const bodegaItems = products.filter((p) => p.location === "Bodega Central");
+      const bodegaHeaders = ["CÓDIGO PRODUCTO", "DESCRIPCIÓN", "TOTAL PRODUCTO", "LOTE", "CATEGORÍA", "MARCA"];
+      const bodegaRows = bodegaItems.map((p) => [
+        p.code,
+        p.name,
+        p.stock,
+        p.lot,
+        p.category,
+        p.brand
+      ]);
+      const wsBodega = XLSX.utils.aoa_to_sheet([bodegaHeaders, ...bodegaRows]);
+      XLSX.utils.book_append_sheet(wb, wsBodega, "INVENTARIOBODEGA");
+
+      // Sheet 3: INVENTARIOOFICINA
+      const oficinaItems = products.filter((p) => p.location === "Oficina Matriz");
+      const oficinaHeaders = ["CÓDIGO PRODUCTO", "DESCRIPCIÓN", "TOTAL PRODUCTO", "LOTE", "CATEGORÍA", "MARCA"];
+      const oficinaRows = oficinaItems.map((p) => [
+        p.code,
+        p.name,
+        p.stock,
+        p.lot,
+        p.category,
+        p.brand
+      ]);
+      const wsOficina = XLSX.utils.aoa_to_sheet([oficinaHeaders, ...oficinaRows]);
+      XLSX.utils.book_append_sheet(wb, wsOficina, "INVENTARIOOFICINA");
+
+      const wbout = XLSX.write(wb, { bookType: "xlsx", type: "binary" });
+      const s2ab = (s: string) => {
+        const buf = new ArrayBuffer(s.length);
+        const view = new Uint8Array(buf);
+        for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xff;
+        return buf;
+      };
+      const blob = new Blob([s2ab(wbout)], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      const now = new Date();
+      const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
+      link.download = `INVENTARIO_SIFF_ACTUALIZADO_${dateStr}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      setToastMessage(`📥 Excel de inventario descargado (${products.length} repuestos).`);
+      setTimeout(() => setToastMessage(null), 3500);
+    } catch (err: any) {
+      console.error("Error al exportar inventario:", err);
+      alert("Error al descargar Excel: " + err.message);
+    }
+  };
+
+  // Export Kardex to Excel
+  const handleExportKardexExcel = () => {
+    try {
+      const wb = XLSX.utils.book_new();
+      const headers = [
+        "FOLIO AUDITORÍA",
+        "FECHA Y HORA",
+        "TIPO MOVIMIENTO",
+        "CANTIDAD",
+        "CÓDIGO REPUESTO",
+        "DESCRIPCIÓN TÉCNICA",
+        "UBICACIÓN",
+        "LOTE",
+        "STOCK ANTERIOR",
+        "STOCK RESULTANTE",
+        "MOTIVO OBLIGATORIO",
+        "DOCUMENTO DE RESPALDO",
+        "RESPONSABLE",
+        "CARGO / ROL",
+        "DISPOSITIVO DE REGISTRO",
+        "OBSERVACIONES"
+      ];
+      const rows = movements.map((m) => [
+        m.folio,
+        m.fullDate,
+        m.type,
+        m.quantity,
+        m.productCode,
+        m.productName,
+        m.location,
+        m.lot,
+        m.previousStock,
+        m.resultingStock,
+        m.reason,
+        m.referenceDetail || m.documentRef || "-",
+        m.technician,
+        m.technicianRole || "-",
+        m.deviceMethod || "Registro Digital",
+        m.notes || "-"
+      ]);
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+      XLSX.utils.book_append_sheet(wb, ws, "KARDEX_AUDITORIA");
+
+      const wbout = XLSX.write(wb, { bookType: "xlsx", type: "binary" });
+      const s2ab = (s: string) => {
+        const buf = new ArrayBuffer(s.length);
+        const view = new Uint8Array(buf);
+        for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xff;
+        return buf;
+      };
+      const blob = new Blob([s2ab(wbout)], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      const now = new Date();
+      const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
+      link.download = `KARDEX_AUDITORIA_SIFF_${dateStr}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      setToastMessage(`📥 Kardex exportado a Excel (${movements.length} transacciones).`);
+      setTimeout(() => setToastMessage(null), 3500);
+    } catch (err: any) {
+      console.error("Error al exportar Kardex:", err);
+      alert("Error al exportar Kardex: " + err.message);
+    }
+  };
+
+  const toggleExpandMovement = (id: string) => {
+    setExpandedMovements((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const toggleExpandAllMovements = () => {
+    const allExpanded = movements.every((m) => expandedMovements[m.id]);
+    const nextState: Record<string, boolean> = {};
+    movements.forEach((m) => {
+      nextState[m.id] = !allExpanded;
+    });
+    setExpandedMovements(nextState);
+  };
+
+  const filteredMovements = useMemo(() => {
+    return movements.filter((m) => {
+      if (kardexFilterType === "SALIDA" && m.type !== "SALIDA") return false;
+      if (kardexFilterType === "ENTRADA" && m.type !== "ENTRADA") return false;
+      if (kardexSearchQuery.trim()) {
+        const q = kardexSearchQuery.toLowerCase();
+        return (
+          m.productCode.toLowerCase().includes(q) ||
+          m.productName.toLowerCase().includes(q) ||
+          m.folio.toLowerCase().includes(q) ||
+          m.technician.toLowerCase().includes(q) ||
+          m.reason.toLowerCase().includes(q) ||
+          (m.referenceDetail && m.referenceDetail.toLowerCase().includes(q))
+        );
+      }
+      return true;
+    });
+  }, [movements, kardexFilterType, kardexSearchQuery]);
 
   // =========================================================================
   // VIEW: LOGIN SCREEN (When not authenticated)
@@ -1167,7 +1495,17 @@ export default function SiffProposalDemo() {
             </div>
 
             {/* Right Action buttons - Aligned and balanced */}
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleExportInventoryExcel}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 shadow-xs hover:border-emerald-500 active:scale-95 transition-all"
+                title="Descargar documento Excel con todo el inventario consolidado y por bodegas"
+              >
+                <Download className="w-4 h-4 text-emerald-600" />
+                <span>Descargar Excel</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => {
@@ -1416,11 +1754,34 @@ export default function SiffProposalDemo() {
                         <div>
                           {/* Product Image Frame (Clean square photo container like in reference Image 1) */}
                           <div className="w-full h-44 bg-slate-50 rounded-xl border border-slate-100 overflow-hidden relative mb-3 flex items-center justify-center p-2 group-hover:border-slate-200 transition-colors">
-                            <img
-                              src={imageUrl}
-                              alt={prod.name}
-                              className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
-                            />
+                            {imageUrl ? (
+                              <img
+                                src={imageUrl}
+                                alt={prod.name}
+                                className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
+                              />
+                            ) : (
+                              <div className="w-full h-full rounded-lg bg-slate-100 flex flex-col items-center justify-center text-slate-400 gap-1.5 p-3 text-center border-2 border-dashed border-slate-200">
+                                <ImageIcon className="w-8 h-8 text-slate-300" />
+                                <span className="text-[11px] font-semibold text-slate-500">Sin foto asignada</span>
+                                <span className="text-[9px] text-slate-400">Clic en Editar para agregar</span>
+                              </div>
+                            )}
+
+                            {/* Quick Edit Overlay Button */}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenEditProduct(prod);
+                              }}
+                              className="absolute top-2 left-2 bg-white/95 hover:bg-white text-slate-700 hover:text-amber-600 px-2 py-1 rounded-lg text-[10px] font-bold shadow-xs border border-slate-200 transition-all flex items-center gap-1 active:scale-95 z-10"
+                              title="Modificar nombre, foto y detalles del repuesto"
+                            >
+                              <Pencil className="w-3 h-3 text-amber-500" />
+                              <span>Editar</span>
+                            </button>
+
                             {/* Stock badge overlay */}
                             <div className="absolute top-2 right-2">
                               <span
@@ -1455,19 +1816,31 @@ export default function SiffProposalDemo() {
                           </div>
                         </div>
 
-                        {/* Stock & Action Button without prices */}
-                        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
-                          <div className="flex items-center gap-1.5">
-                            <span className={`w-2 h-2 rounded-full ${isLow ? "bg-rose-500 animate-pulse" : "bg-emerald-400"}`}></span>
-                            <span className="text-xs text-slate-600 font-semibold">{prod.stock} un. disponibles</span>
+                        {/* Stock & Action Buttons without prices */}
+                        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className={`w-2 h-2 rounded-full shrink-0 ${isLow ? "bg-rose-500 animate-pulse" : "bg-emerald-400"}`}></span>
+                            <span className="text-xs text-slate-600 font-semibold truncate">{prod.stock} un.</span>
                           </div>
 
-                          <button
-                            onClick={() => handleSelectProduct(prod)}
-                            className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition-all shadow active:scale-95"
-                          >
-                            Mover / Retirar
-                          </button>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEditProduct(prod)}
+                              className="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all border border-slate-200 flex items-center gap-1 active:scale-95"
+                              title="Modificar descripción, foto o datos"
+                            >
+                              <Pencil className="w-3 h-3 text-slate-500" />
+                              <span>Editar</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSelectProduct(prod)}
+                              className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition-all shadow active:scale-95"
+                            >
+                              Mover / Retirar
+                            </button>
+                          </div>
                         </div>
                       </div>
                     );
@@ -1486,7 +1859,7 @@ export default function SiffProposalDemo() {
                           <th className="px-4 py-3">Lote</th>
                           <th className="px-4 py-3">Ubicación</th>
                           <th className="px-4 py-3">Stock Actual</th>
-                          <th className="px-4 py-3 text-right">Acción</th>
+                          <th className="px-4 py-3 text-right">Acciones</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
@@ -1496,11 +1869,17 @@ export default function SiffProposalDemo() {
                           return (
                             <tr key={prod.id} className="hover:bg-slate-50/80 transition-colors">
                               <td className="px-4 py-2">
-                                <img
-                                  src={imageUrl}
-                                  alt={prod.name}
-                                  className="w-10 h-10 object-cover rounded-lg border border-slate-200"
-                                />
+                                {imageUrl ? (
+                                  <img
+                                    src={imageUrl}
+                                    alt={prod.name}
+                                    className="w-10 h-10 object-cover rounded-lg border border-slate-200"
+                                  />
+                                ) : (
+                                  <div className="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">
+                                    <ImageIcon className="w-5 h-5 text-slate-300" />
+                                  </div>
+                                )}
                               </td>
                               <td className="px-4 py-3 font-mono font-bold text-cyan-700">{prod.code}</td>
                               <td className="px-4 py-3">
@@ -1519,12 +1898,24 @@ export default function SiffProposalDemo() {
                                 </span>
                               </td>
                               <td className="px-4 py-3 text-right">
-                                <button
-                                  onClick={() => handleSelectProduct(prod)}
-                                  className="px-2.5 py-1 rounded-lg bg-cyan-50 text-cyan-700 hover:bg-cyan-600 hover:text-white border border-cyan-200 text-xs font-semibold transition-all"
-                                >
-                                  Mover
-                                </button>
+                                <div className="flex items-center justify-end gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenEditProduct(prod)}
+                                    className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-semibold flex items-center gap-1 transition-all"
+                                    title="Modificar ficha y foto del repuesto"
+                                  >
+                                    <Pencil className="w-3 h-3 text-slate-500" />
+                                    <span>Editar</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSelectProduct(prod)}
+                                    className="px-2.5 py-1 rounded-lg bg-cyan-50 text-cyan-700 hover:bg-cyan-600 hover:text-white border border-cyan-200 text-xs font-semibold transition-all"
+                                  >
+                                    Mover
+                                  </button>
+                                </div>
                               </td>
                             </tr>
                           );
@@ -1537,50 +1928,371 @@ export default function SiffProposalDemo() {
             </div>
           )}
 
-          {/* Subtab 2: Kardex Audit */}
+          {/* Subtab 2: Kardex Audit con Desplegables de Detalle */}
           {gerenciaSubTab === "kardex" && (
-            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
-              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <Clock className="w-5 h-5 text-amber-400" />
-                Auditoría Total de Entradas y Salidas
-              </h2>
-              <div className="overflow-x-auto rounded-xl border border-slate-200">
+            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-5">
+              {/* Header con título y acciones rápidas */}
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-amber-500" />
+                    Auditoría Total & Kardex Integral de Entradas y Salidas
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Cada registro cuenta con folio único, trazabilidad de stock previo/posterior y soporte documental. Haz clic en cualquier fila para ver todos sus detalles.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={toggleExpandAllMovements}
+                    className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-200 transition-all active:scale-95 flex items-center gap-1.5"
+                  >
+                    <List className="w-3.5 h-3.5" />
+                    <span>Expandir / Colapsar Todos</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleExportKardexExcel}
+                    className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs active:scale-95 transition-all flex items-center gap-1.5"
+                    title="Descargar historial de Kardex completo en formato Excel"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Exportar Kardex a Excel</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Filters Bar: Search + Type selector */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={kardexSearchQuery}
+                    onChange={(e) => setKardexSearchQuery(e.target.value)}
+                    placeholder="Buscar por código, repuesto, folio, motivo o técnico..."
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:bg-white transition-all shadow-xs"
+                  />
+                  {kardexSearchQuery && (
+                    <button
+                      onClick={() => setKardexSearchQuery("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex bg-slate-200/70 p-1 rounded-xl border border-slate-200 text-xs font-semibold shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setKardexFilterType("TODOS")}
+                    className={`px-3 py-1.5 rounded-lg transition-all ${
+                      kardexFilterType === "TODOS" ? "bg-white text-slate-900 font-bold shadow-xs" : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    Todos ({movements.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setKardexFilterType("SALIDA")}
+                    className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 ${
+                      kardexFilterType === "SALIDA" ? "bg-white text-rose-700 font-bold shadow-xs" : "text-slate-600 hover:text-rose-700"
+                    }`}
+                  >
+                    <ArrowDownLeft className="w-3 h-3 text-rose-500" />
+                    Salidas ({movements.filter((m) => m.type === "SALIDA").length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setKardexFilterType("ENTRADA")}
+                    className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 ${
+                      kardexFilterType === "ENTRADA" ? "bg-white text-emerald-700 font-bold shadow-xs" : "text-slate-600 hover:text-emerald-700"
+                    }`}
+                  >
+                    <ArrowUpRight className="w-3 h-3 text-emerald-500" />
+                    Entradas ({movements.filter((m) => m.type === "ENTRADA").length})
+                  </button>
+                </div>
+              </div>
+
+              {/* Kardex Table with Expandable Accordion Rows */}
+              <div className="overflow-x-auto rounded-2xl border border-slate-200 shadow-xs">
                 <table className="w-full text-left text-xs sm:text-sm">
                   <thead className="bg-slate-50 text-slate-600 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200">
                     <tr>
-                      <th className="px-4 py-3">Fecha</th>
-                      <th className="px-4 py-3">Tipo</th>
-                      <th className="px-4 py-3">Repuesto</th>
+                      <th className="px-3 py-3 w-10 text-center">Detalle</th>
+                      <th className="px-4 py-3">Folio</th>
+                      <th className="px-4 py-3">Fecha & Hora</th>
+                      <th className="px-4 py-3">Tipo Movimiento</th>
+                      <th className="px-4 py-3">Repuesto & Código</th>
                       <th className="px-4 py-3">Ubicación</th>
                       <th className="px-4 py-3">Motivo Obligatorio</th>
                       <th className="px-4 py-3">Responsable</th>
+                      <th className="px-4 py-3 text-right">Comprobante</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {movements.map((m) => (
-                      <tr key={m.id} className="hover:bg-slate-50/80">
-                        <td className="px-4 py-3 font-mono text-xs text-slate-400">{m.timestamp}</td>
-                        <td className="px-4 py-3">
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                              m.type === "SALIDA" ? "bg-rose-500/10 text-rose-400" : "bg-emerald-500/10 text-emerald-400"
-                            }`}
-                          >
-                            {m.type}: {m.quantity} un.
-                          </span>
+                    {filteredMovements.length === 0 ? (
+                      <tr>
+                        <td colSpan={9} className="px-4 py-8 text-center text-slate-400">
+                          No se encontraron movimientos registrados con el filtro actual.
                         </td>
-                        <td className="px-4 py-3">
-                          <div className="font-semibold text-slate-900">{m.productName}</div>
-                          <div className="text-xs text-cyan-700 font-mono font-bold">{m.productCode}</div>
-                        </td>
-                        <td className="px-4 py-3 text-slate-600">{m.location}</td>
-                        <td className="px-4 py-3">
-                          <div className="font-medium text-slate-800">{m.reason}</div>
-                          {m.referenceDetail && <div className="text-xs text-slate-400 italic">"{m.referenceDetail}"</div>}
-                        </td>
-                        <td className="px-4 py-3 text-slate-600">{m.technician}</td>
                       </tr>
-                    ))}
+                    ) : (
+                      filteredMovements.map((m) => {
+                        const isExpanded = !!expandedMovements[m.id];
+                        return (
+                          <React.Fragment key={m.id}>
+                            {/* Main Row - Clickable to expand */}
+                            <tr
+                              onClick={() => toggleExpandMovement(m.id)}
+                              className={`cursor-pointer transition-colors ${
+                                isExpanded ? "bg-amber-50/40" : "hover:bg-slate-50/80"
+                              }`}
+                            >
+                              {/* Accordion Chevron Toggle */}
+                              <td className="px-3 py-3.5 text-center">
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleExpandMovement(m.id);
+                                  }}
+                                  className={`p-1 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 transition-transform duration-200 ${
+                                    isExpanded ? "rotate-180 text-amber-600 bg-amber-100/60" : ""
+                                  }`}
+                                  title={isExpanded ? "Ocultar detalles" : "Ver detalles completos"}
+                                >
+                                  <ChevronDown className="w-4 h-4" />
+                                </button>
+                              </td>
+
+                              {/* Folio */}
+                              <td className="px-4 py-3.5 font-mono text-xs font-bold text-amber-900 whitespace-nowrap">
+                                <span className="bg-amber-50 px-2 py-0.5 rounded border border-amber-200/80">
+                                  {m.folio}
+                                </span>
+                              </td>
+
+                              {/* Date and time */}
+                              <td className="px-4 py-3.5">
+                                <div className="font-mono text-xs text-slate-700 font-semibold">{m.timestamp}</div>
+                                <div className="text-[10px] text-slate-400 font-mono">{m.fullDate}</div>
+                              </td>
+
+                              {/* Movement Type & Qty Badge */}
+                              <td className="px-4 py-3.5">
+                                <span
+                                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${
+                                    m.type === "SALIDA"
+                                      ? "bg-rose-500/10 text-rose-600 border border-rose-200"
+                                      : "bg-emerald-500/10 text-emerald-700 border border-emerald-200"
+                                  }`}
+                                >
+                                  {m.type === "SALIDA" ? (
+                                    <ArrowDownLeft className="w-3.5 h-3.5 text-rose-500" />
+                                  ) : (
+                                    <ArrowUpRight className="w-3.5 h-3.5 text-emerald-600" />
+                                  )}
+                                  {m.type}: {m.quantity} un.
+                                </span>
+                              </td>
+
+                              {/* Product Name & Code */}
+                              <td className="px-4 py-3.5">
+                                <div className="font-bold text-slate-900 line-clamp-1">{m.productName}</div>
+                                <div className="text-xs text-cyan-700 font-mono font-bold">{m.productCode}</div>
+                              </td>
+
+                              {/* Location */}
+                              <td className="px-4 py-3.5 text-slate-600 whitespace-nowrap">
+                                <span className="inline-flex items-center gap-1">
+                                  📍 {m.location}
+                                </span>
+                              </td>
+
+                              {/* Reason */}
+                              <td className="px-4 py-3.5">
+                                <div className="font-medium text-slate-800">{m.reason}</div>
+                                {m.referenceDetail && (
+                                  <div className="text-xs text-slate-500 italic line-clamp-1">
+                                    "{m.referenceDetail}"
+                                  </div>
+                                )}
+                              </td>
+
+                              {/* Technician / Responsible */}
+                              <td className="px-4 py-3.5 text-slate-700 whitespace-nowrap font-medium">
+                                {m.technician}
+                              </td>
+
+                              {/* Voucher Action Button */}
+                              <td className="px-4 py-3.5 text-right whitespace-nowrap">
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedVoucherMovement(m);
+                                  }}
+                                  className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-semibold transition-all inline-flex items-center gap-1 active:scale-95 shadow-xs"
+                                  title="Ver e imprimir vale de entrega"
+                                >
+                                  <Printer className="w-3 h-3 text-slate-500" />
+                                  <span>Vale</span>
+                                </button>
+                              </td>
+                            </tr>
+
+                            {/* Desplegable: Detalle Extendido Completo de Auditoría */}
+                            {isExpanded && (
+                              <tr className="bg-amber-50/20 border-b border-slate-200">
+                                <td colSpan={9} className="p-3 sm:p-5">
+                                  <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-xs space-y-4 animate-in fade-in duration-200 text-slate-800">
+                                    {/* Encabezado del Detalle */}
+                                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                                      <div className="flex flex-wrap items-center gap-2">
+                                        <span className="font-mono text-xs font-black px-2.5 py-1 rounded-lg bg-amber-100 text-amber-900 border border-amber-300">
+                                          DETALLE COMPLETO DE AUDITORÍA: {m.folio}
+                                        </span>
+                                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                                          Registro Sincronizado en Supabase
+                                        </span>
+                                      </div>
+                                      <span className="text-xs text-slate-500 font-mono flex items-center gap-1.5">
+                                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                                        Fecha exacta: {m.fullDate}
+                                      </span>
+                                    </div>
+
+                                    {/* 3 Tarjetas de Detalle Analítico */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs">
+                                      {/* Tarjeta 1: Balances de Stock */}
+                                      <div className="bg-slate-50/80 rounded-xl p-3.5 border border-slate-200 space-y-2.5">
+                                        <div className="flex items-center justify-between text-slate-500 font-bold uppercase text-[10px] tracking-wider">
+                                          <span>Balance Físico de Stock</span>
+                                          <Package className="w-3.5 h-3.5 text-amber-500" />
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-2 text-center pt-1">
+                                          <div className="bg-white p-2 rounded-lg border border-slate-200 shadow-xs">
+                                            <span className="text-[10px] text-slate-400 block font-semibold">Stock Previo</span>
+                                            <strong className="text-sm text-slate-800">{m.previousStock} un.</strong>
+                                          </div>
+                                          <div
+                                            className={`p-2 rounded-lg border shadow-xs ${
+                                              m.type === "SALIDA"
+                                                ? "bg-rose-50 border-rose-200 text-rose-700"
+                                                : "bg-emerald-50 border-emerald-200 text-emerald-700"
+                                            }`}
+                                          >
+                                            <span className="text-[10px] block font-semibold">
+                                              {m.type === "SALIDA" ? "Salida (-)" : "Entrada (+)"}
+                                            </span>
+                                            <strong className="text-sm font-black">{m.quantity} un.</strong>
+                                          </div>
+                                          <div className="bg-white p-2 rounded-lg border border-slate-200 shadow-xs">
+                                            <span className="text-[10px] text-slate-400 block font-semibold">Saldo Posterior</span>
+                                            <strong className="text-sm text-slate-900">{m.resultingStock} un.</strong>
+                                          </div>
+                                        </div>
+                                        <div className="pt-2 text-[11px] text-slate-600 space-y-1 border-t border-slate-200/60">
+                                          <div>• <strong>Lote Asignado:</strong> <span className="font-mono font-bold text-slate-800">{m.lot}</span></div>
+                                          <div>• <strong>Ubicación Almacén:</strong> {m.location}</div>
+                                        </div>
+                                      </div>
+
+                                      {/* Tarjeta 2: Justificación & Respaldo */}
+                                      <div className="bg-slate-50/80 rounded-xl p-3.5 border border-slate-200 space-y-2.5">
+                                        <div className="flex items-center justify-between text-slate-500 font-bold uppercase text-[10px] tracking-wider">
+                                          <span>Justificación & Documento</span>
+                                          <FileText className="w-3.5 h-3.5 text-cyan-600" />
+                                        </div>
+                                        <div className="space-y-1.5 pt-1">
+                                          <div>
+                                            <span className="text-[10px] text-slate-400 font-semibold block uppercase">Motivo Obligatorio:</span>
+                                            <span className="font-bold text-slate-800 text-xs">{m.reason}</span>
+                                          </div>
+                                          <div>
+                                            <span className="text-[10px] text-slate-400 font-semibold block uppercase">Detalle / Referencia:</span>
+                                            <span className="italic text-slate-700 bg-white px-2.5 py-1.5 rounded-lg border border-slate-200 block mt-0.5 shadow-xs">
+                                              "{m.referenceDetail || "Registro In Situ en Bodega"}"
+                                            </span>
+                                          </div>
+                                          <div className="text-[11px] text-slate-600 pt-1">
+                                            • <strong>Documento de Soporte:</strong> <span className="font-semibold text-slate-800">{m.documentRef || "Vale Interno de Movimiento"}</span>
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      {/* Tarjeta 3: Personal & Seguridad */}
+                                      <div className="bg-slate-50/80 rounded-xl p-3.5 border border-slate-200 space-y-2.5">
+                                        <div className="flex items-center justify-between text-slate-500 font-bold uppercase text-[10px] tracking-wider">
+                                          <span>Personal & Método</span>
+                                          <Smartphone className="w-3.5 h-3.5 text-indigo-600" />
+                                        </div>
+                                        <div className="space-y-1.5 pt-1">
+                                          <div>
+                                            <span className="text-[10px] text-slate-400 font-semibold block uppercase">Responsable que Ejecuta:</span>
+                                            <span className="font-bold text-slate-900 text-xs">{m.technician}</span>
+                                            <span className="text-[10px] text-slate-500 block">{m.technicianRole || "Personal SIFF Autorizado"}</span>
+                                          </div>
+                                          <div>
+                                            <span className="text-[10px] text-slate-400 font-semibold block uppercase">Canal de Captura:</span>
+                                            <span className="inline-flex items-center gap-1 font-mono text-[11px] text-cyan-800 bg-cyan-50 px-2 py-0.5 rounded border border-cyan-200">
+                                              <QrCode className="w-3 h-3 text-cyan-600" />
+                                              {m.deviceMethod || "Registro Táctil POS"}
+                                            </span>
+                                          </div>
+                                          <div className="text-[10px] text-slate-500 pt-1">
+                                            • <strong>Observaciones:</strong> {m.notes || "Movimiento registrado y validado."}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* Barra de Acciones del Desplegable */}
+                                    <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
+                                      <div className="text-xs text-slate-600">
+                                        Repuesto vinculado: <strong className="text-slate-900 font-mono">{m.productCode}</strong> — {m.productName}
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <button
+                                          type="button"
+                                          onClick={() => setSelectedVoucherMovement(m)}
+                                          className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold border border-slate-200 flex items-center gap-1.5 transition-all shadow-xs active:scale-95"
+                                        >
+                                          <Printer className="w-3.5 h-3.5 text-slate-600" />
+                                          <span>Imprimir Vale de Entrega</span>
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            const found = products.find((p) => p.code === m.productCode);
+                                            if (found) {
+                                              handleOpenEditProduct(found);
+                                            } else {
+                                              alert("El repuesto ya no se encuentra en el catálogo.");
+                                            }
+                                          }}
+                                          className="px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold border border-amber-200 flex items-center gap-1.5 transition-all active:scale-95"
+                                        >
+                                          <Pencil className="w-3.5 h-3.5 text-amber-600" />
+                                          <span>Modificar Ficha de este Repuesto</span>
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
+                        );
+                      })
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -2991,6 +3703,425 @@ export default function SiffProposalDemo() {
               >
                 Cerrar Ventana
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: MODIFICAR / EDITAR REPUESTO Y FOTO */}
+      {/* ========================================================================= */}
+      {isEditProductOpen && editingProduct && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white border border-slate-200 w-full max-w-xl rounded-3xl p-6 shadow-2xl relative my-8 animate-in fade-in zoom-in-95 text-slate-800">
+            <button
+              type="button"
+              onClick={() => {
+                setIsEditProductOpen(false);
+                setEditingProduct(null);
+              }}
+              className="absolute right-5 top-5 text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 p-2 rounded-full transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <Pencil className="w-5 h-5 text-amber-500" />
+              Editar Repuesto & Fotografía
+            </h3>
+            <p className="text-xs text-slate-500 mt-1">
+              Modifica la descripción técnica, foto (quitar o cambiar), lote, ubicación, stock o categoría del repuesto.
+            </p>
+
+            <form onSubmit={handleSaveEditProduct} className="space-y-4 mt-5">
+              {/* Product Photo Box: Preview, Remove, Upload, URL */}
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-700 uppercase">
+                    Foto del Repuesto
+                  </label>
+                  <span className="text-[11px] text-slate-500">
+                    {editImageUrl === "NO_IMAGE"
+                      ? "❌ Foto eliminada"
+                      : editImageUrl.trim()
+                      ? "📸 Foto personalizada activa"
+                      : "Sugerida por categoría"}
+                  </span>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  <div className="w-28 h-28 bg-white rounded-2xl border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center shadow-xs relative">
+                    {editImageUrl === "NO_IMAGE" ? (
+                      <div className="flex flex-col items-center justify-center text-slate-400 p-2 text-center">
+                        <ImageIcon className="w-8 h-8 text-slate-300" />
+                        <span className="text-[10px] font-bold text-rose-500 mt-1">Sin imagen</span>
+                      </div>
+                    ) : editImageUrl.trim() ? (
+                      <img src={editImageUrl} alt="Vista previa" className="w-full h-full object-cover" />
+                    ) : (
+                      <img
+                        src={CATEGORY_IMAGES[editCategory] || CATEGORY_IMAGES["Válvulas & Controles"]}
+                        alt="Sugerida"
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                  </div>
+
+                  <div className="flex-1 space-y-2 w-full">
+                    {/* Action buttons for Image */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      {/* Button: Subir foto desde dispositivo */}
+                      <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-semibold shadow-xs active:scale-95 transition-all">
+                        <Camera className="w-3.5 h-3.5 text-slate-600" />
+                        <span>Subir Foto (Cámara / Archivo)</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onload = (ev) => {
+                                if (ev.target?.result) {
+                                  setEditImageUrl(ev.target.result as string);
+                                }
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                        />
+                      </label>
+
+                      {/* Button: Quitar imagen */}
+                      {editImageUrl !== "NO_IMAGE" && (
+                        <button
+                          type="button"
+                          onClick={() => setEditImageUrl("NO_IMAGE")}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold transition-all active:scale-95"
+                          title="Quitar la imagen de este producto"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                          <span>Quitar Imagen</span>
+                        </button>
+                      )}
+
+                      {/* Button: Restablecer sugerida */}
+                      {editImageUrl !== "" && (
+                        <button
+                          type="button"
+                          onClick={() => setEditImageUrl("")}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[11px] text-slate-600 hover:text-slate-900 font-semibold"
+                        >
+                          <span>Foto por defecto</span>
+                        </button>
+                      )}
+                    </div>
+
+                    {/* URL Input */}
+                    <div className="relative">
+                      <input
+                        type="url"
+                        value={editImageUrl === "NO_IMAGE" ? "" : editImageUrl}
+                        onChange={(e) => setEditImageUrl(e.target.value)}
+                        placeholder="O pega una URL directa de imagen (https://...)"
+                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500 shadow-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Technical Description / Name Input */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                  Descripción Técnica / Nombre del Repuesto *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="Ej: ACOPLE DE MATRIMONIO 9H"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 shadow-xs"
+                />
+              </div>
+
+              {/* Code and Brand */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                    Código del Repuesto *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editCode}
+                    onChange={(e) => setEditCode(e.target.value)}
+                    placeholder="Ej: ACO3818"
+                    className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-mono font-bold text-amber-900 uppercase focus:outline-none focus:border-amber-500 shadow-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                    Marca / Fabricante
+                  </label>
+                  <input
+                    type="text"
+                    value={editBrand}
+                    onChange={(e) => setEditBrand(e.target.value)}
+                    placeholder="Ej: Danfoss, Vilter, Bitzer"
+                    className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-amber-500 shadow-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Category and Location */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                    Categoría
+                  </label>
+                  <select
+                    value={editCategory}
+                    onChange={(e) => setEditCategory(e.target.value)}
+                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-amber-500 shadow-xs"
+                  >
+                    <option value="Válvulas & Controles">Válvulas & Controles</option>
+                    <option value="Bombas, Aceites & Filtros">Bombas, Aceites & Filtros</option>
+                    <option value="Mecánica & Compresores">Mecánica & Compresores</option>
+                    <option value="Sellos, Empaques & O-Rings">Sellos, Empaques & O-Rings</option>
+                    <option value="Acoples & Bridas">Acoples & Bridas</option>
+                    <option value="Repuestos Eléctricos & Varios">Repuestos Eléctricos & Varios</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                    Ubicación Física
+                  </label>
+                  <select
+                    value={editLocation}
+                    onChange={(e) => setEditLocation(e.target.value as "Bodega Central" | "Oficina Matriz")}
+                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-amber-500 shadow-xs"
+                  >
+                    <option value="Bodega Central">Bodega Central</option>
+                    <option value="Oficina Matriz">Oficina Matriz</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Stock and Lot */}
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                    Stock Actual
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={editStock}
+                    onChange={(e) => setEditStock(Number(e.target.value))}
+                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-amber-500 shadow-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                    Stock Mínimo
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={editMinStock}
+                    onChange={(e) => setEditMinStock(Number(e.target.value))}
+                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-amber-500 shadow-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                    Lote
+                  </label>
+                  <input
+                    type="text"
+                    value={editLot}
+                    onChange={(e) => setEditLot(e.target.value)}
+                    placeholder="LT001"
+                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:border-amber-500 shadow-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-4 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleDeleteProduct(editingProduct.id)}
+                  className="px-3.5 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Eliminar del Catálogo</span>
+                </button>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsEditProductOpen(false);
+                      setEditingProduct(null);
+                    }}
+                    className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-bold transition-all"
+                  >
+                    Cancelar
+                  </button>
+
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 text-xs font-bold shadow-md active:scale-95 transition-all flex items-center gap-1.5"
+                  >
+                    <Check className="w-4 h-4" />
+                    <span>Guardar Cambios</span>
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: COMPROBANTE OFICIAL / VALE DE ENTREGA KARDEX */}
+      {/* ========================================================================= */}
+      {selectedVoucherMovement && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white border border-slate-300 w-full max-w-lg rounded-3xl p-6 sm:p-8 shadow-2xl relative my-6 text-slate-900">
+            <button
+              type="button"
+              onClick={() => setSelectedVoucherMovement(null)}
+              className="absolute right-5 top-5 text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 p-2 rounded-full transition-colors print:hidden"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Voucher Header */}
+            <div className="border-b-2 border-slate-900 pb-4 mb-4 flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-amber-500 text-slate-950 font-black flex items-center justify-center text-sm">
+                    SIFF
+                  </div>
+                  <span className="font-black text-base text-slate-900">SIFF REFRIGERACIÓN INDUSTRIAL</span>
+                </div>
+                <p className="text-[10px] text-slate-500 mt-0.5">RUC: 0992384756001 • Vía Daule Km 11.5, Guayaquil, Ecuador</p>
+                <p className="text-[10px] text-slate-500">Telf: (+593) 04-288-9944 • Correo: operaciones@siff.com.ec</p>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">COMPROBANTE KARDEX</span>
+                <span className="font-mono text-sm font-black text-cyan-800">{selectedVoucherMovement.folio}</span>
+              </div>
+            </div>
+
+            {/* Date and Status Bar */}
+            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 grid grid-cols-2 gap-2 text-xs mb-4">
+              <div>
+                <span className="text-[10px] text-slate-400 block font-semibold">FECHA Y HORA:</span>
+                <span className="font-mono font-bold text-slate-800">{selectedVoucherMovement.fullDate}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-400 block font-semibold">TIPO DE OPERACIÓN:</span>
+                <span className={`font-bold ${selectedVoucherMovement.type === "SALIDA" ? "text-rose-600" : "text-emerald-600"}`}>
+                  {selectedVoucherMovement.type} FÍSICA ({selectedVoucherMovement.quantity} un.)
+                </span>
+              </div>
+            </div>
+
+            {/* Part details */}
+            <div className="space-y-3 text-xs mb-4">
+              <div className="border border-slate-200 rounded-xl p-3 bg-white">
+                <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">REPUESTO DESPACHADO / RECIBIDO</span>
+                <h4 className="text-sm font-black text-slate-900">{selectedVoucherMovement.productName}</h4>
+                <div className="grid grid-cols-3 gap-2 mt-2 font-mono text-[11px] text-slate-600">
+                  <div><strong>CÓDIGO:</strong> {selectedVoucherMovement.productCode}</div>
+                  <div><strong>LOTE:</strong> {selectedVoucherMovement.lot}</div>
+                  <div><strong>UBICACIÓN:</strong> {selectedVoucherMovement.location}</div>
+                </div>
+              </div>
+
+              {/* Balances */}
+              <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                <div className="bg-slate-50 p-2 rounded-xl border border-slate-200">
+                  <span className="text-[10px] text-slate-400 block">Stock Previo</span>
+                  <strong className="text-slate-800">{selectedVoucherMovement.previousStock} un.</strong>
+                </div>
+                <div className="bg-slate-50 p-2 rounded-xl border border-slate-200">
+                  <span className="text-[10px] text-slate-400 block">Movimiento</span>
+                  <strong className={selectedVoucherMovement.type === "SALIDA" ? "text-rose-600" : "text-emerald-600"}>
+                    {selectedVoucherMovement.type === "SALIDA" ? `-${selectedVoucherMovement.quantity}` : `+${selectedVoucherMovement.quantity}`} un.
+                  </strong>
+                </div>
+                <div className="bg-slate-50 p-2 rounded-xl border border-slate-200">
+                  <span className="text-[10px] text-slate-400 block">Saldo Actual</span>
+                  <strong className="text-slate-900">{selectedVoucherMovement.resultingStock} un.</strong>
+                </div>
+              </div>
+
+              {/* Motivation */}
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
+                <div>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase block">MOTIVO OBLIGATORIO:</span>
+                  <span className="font-semibold text-slate-800">{selectedVoucherMovement.reason}</span>
+                </div>
+                {selectedVoucherMovement.referenceDetail && (
+                  <div className="mt-1 text-slate-600 italic">
+                    Referencia: "{selectedVoucherMovement.referenceDetail}"
+                  </div>
+                )}
+                {selectedVoucherMovement.documentRef && (
+                  <div className="mt-1 text-slate-500 text-[11px]">
+                    Soporte: {selectedVoucherMovement.documentRef}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Signature blocks */}
+            <div className="grid grid-cols-2 gap-6 pt-6 border-t border-slate-200 mt-6 text-center text-xs">
+              <div>
+                <div className="h-12 border-b border-dashed border-slate-400 mb-2"></div>
+                <span className="font-bold text-slate-900 block">{selectedVoucherMovement.technician}</span>
+                <span className="text-[10px] text-slate-500 block">{selectedVoucherMovement.technicianRole || "Responsable"}</span>
+                <span className="text-[9px] text-slate-400">Entregado / Autorizado Conforme</span>
+              </div>
+              <div>
+                <div className="h-12 border-b border-dashed border-slate-400 mb-2"></div>
+                <span className="font-bold text-slate-900 block">Firma del Solicitante / Cliente</span>
+                <span className="text-[10px] text-slate-500 block">Recepción en Campo o Mostrador</span>
+                <span className="text-[9px] text-slate-400">Recibido Conforme</span>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="mt-6 pt-4 border-t border-slate-200 flex items-center justify-between gap-2 print:hidden">
+              <span className="text-[11px] font-mono text-slate-400">Hash: SIFF-SEC-{selectedVoucherMovement.id}</span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedVoucherMovement(null)}
+                  className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold"
+                >
+                  Cerrar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold shadow-md flex items-center gap-1.5 active:scale-95"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>Imprimir Comprobante</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
