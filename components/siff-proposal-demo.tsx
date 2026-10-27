@@ -1017,77 +1017,41 @@ export default function SiffProposalDemo() {
   };
 
   // Helper to trigger browser download with correct filename and extension
-  const saveWorkbookToBrowser = (wb: XLSX.WorkBook, filename: string) => {
-    try {
-      const wboutBase64 = XLSX.write(wb, { bookType: "xlsx", type: "base64" });
-
-      // Create or reuse hidden iframe target to prevent any page navigation
-      let iframe = document.getElementById("siff-download-frame") as HTMLIFrameElement | null;
-      if (!iframe) {
-        iframe = document.createElement("iframe");
-        iframe.id = "siff-download-frame";
-        iframe.name = "siff-download-frame";
-        iframe.style.position = "fixed";
-        iframe.style.width = "0";
-        iframe.style.height = "0";
-        iframe.style.border = "none";
-        iframe.style.opacity = "0";
-        iframe.style.pointerEvents = "none";
-        document.body.appendChild(iframe);
+  const saveWorkbookToBrowser = async (wb: XLSX.WorkBook, filename: string, exportType: "inventory" | "kardex" = "inventory") => {
+    // 1. Priority: Modern Native File System Access API (Native Windows Chrome/Edge)
+    // Opens Windows "Guardar como" dialog directly with suggested name .xlsx and writes directly to disk.
+    if (typeof window !== "undefined" && "showSaveFilePicker" in window) {
+      try {
+        const handle = await (window as any).showSaveFilePicker({
+          suggestedName: filename,
+          types: [
+            {
+              description: "Libro de Excel (*.xlsx)",
+              accept: {
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"]
+              }
+            }
+          ]
+        });
+        const writable = await handle.createWritable();
+        const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+        await writable.write(new Blob([wbout]));
+        await writable.close();
+        setToastMessage(`💾 Excel guardado exitosamente: ${filename}`);
+        setTimeout(() => setToastMessage(null), 3500);
+        return;
+      } catch (err: any) {
+        if (err.name === "AbortError") {
+          // User cancelled the file picker dialog
+          return;
+        }
+        console.warn("showSaveFilePicker fallback:", err);
       }
-
-      // Submit via hidden form to /api/export-excel
-      // The browser receives native HTTP Content-Disposition: attachment with the EXACT filename.xlsx
-      // This bypasses Chrome's blob UUID naming bug completely!
-      const form = document.createElement("form");
-      form.method = "POST";
-      form.action = "/api/export-excel";
-      form.target = "siff-download-frame";
-      form.style.display = "none";
-
-      const filenameInput = document.createElement("input");
-      filenameInput.type = "hidden";
-      filenameInput.name = "filename";
-      filenameInput.value = filename;
-      form.appendChild(filenameInput);
-
-      const base64Input = document.createElement("input");
-      base64Input.type = "hidden";
-      base64Input.name = "base64";
-      base64Input.value = wboutBase64;
-      form.appendChild(base64Input);
-
-      document.body.appendChild(form);
-      form.submit();
-
-      setTimeout(() => {
-        try {
-          if (form.parentNode) {
-            form.parentNode.removeChild(form);
-          }
-        } catch (e) {}
-      }, 3000);
-    } catch (err: any) {
-      console.warn("Server-assisted download fallback to client blob:", err);
-      // Fallback
-      const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-      const blob = new Blob([wbout], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-      });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = filename;
-      link.setAttribute("download", filename);
-      document.body.appendChild(link);
-      link.click();
-      setTimeout(() => {
-        try {
-          if (link.parentNode) link.parentNode.removeChild(link);
-          URL.revokeObjectURL(url);
-        } catch (e) {}
-      }, 60000);
     }
+
+    // 2. Direct top-level HTTP download via /api/export-excel
+    // Browser stays on page and native download manager writes directly to Downloads folder.
+    window.location.assign(`/api/export-excel?type=${exportType}&t=${Date.now()}`);
   };
 
   // Export Kardex to Excel
@@ -1135,7 +1099,7 @@ export default function SiffProposalDemo() {
 
       const now = new Date();
       const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
-      saveWorkbookToBrowser(wb, `KARDEX_AUDITORIA_SIFF_${dateStr}.xlsx`);
+      saveWorkbookToBrowser(wb, `KARDEX_AUDITORIA_SIFF_${dateStr}.xlsx`, "kardex");
 
       setToastMessage(`📥 Kardex exportado a Excel (${movements.length} transacciones).`);
       setTimeout(() => setToastMessage(null), 3500);
