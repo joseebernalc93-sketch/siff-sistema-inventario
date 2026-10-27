@@ -1018,31 +1018,76 @@ export default function SiffProposalDemo() {
 
   // Helper to trigger browser download with correct filename and extension
   const saveWorkbookToBrowser = (wb: XLSX.WorkBook, filename: string) => {
-    // Generate binary buffer using Uint8Array
-    const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-    const blob = new Blob([wbout], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    });
+    try {
+      const wboutBase64 = XLSX.write(wb, { bookType: "xlsx", type: "base64" });
 
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    link.style.display = "none";
-    document.body.appendChild(link);
-    link.click();
-
-    // Critical: Do NOT revokeObjectURL immediately, otherwise Chrome fails to retrieve the filename and uses an internal UUID!
-    setTimeout(() => {
-      try {
-        if (link.parentNode) {
-          document.body.removeChild(link);
-        }
-        URL.revokeObjectURL(url);
-      } catch (e) {
-        // cleanup
+      // Create or reuse hidden iframe target to prevent any page navigation
+      let iframe = document.getElementById("siff-download-frame") as HTMLIFrameElement | null;
+      if (!iframe) {
+        iframe = document.createElement("iframe");
+        iframe.id = "siff-download-frame";
+        iframe.name = "siff-download-frame";
+        iframe.style.position = "fixed";
+        iframe.style.width = "0";
+        iframe.style.height = "0";
+        iframe.style.border = "none";
+        iframe.style.opacity = "0";
+        iframe.style.pointerEvents = "none";
+        document.body.appendChild(iframe);
       }
-    }, 60000);
+
+      // Submit via hidden form to /api/export-excel
+      // The browser receives native HTTP Content-Disposition: attachment with the EXACT filename.xlsx
+      // This bypasses Chrome's blob UUID naming bug completely!
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = "/api/export-excel";
+      form.target = "siff-download-frame";
+      form.style.display = "none";
+
+      const filenameInput = document.createElement("input");
+      filenameInput.type = "hidden";
+      filenameInput.name = "filename";
+      filenameInput.value = filename;
+      form.appendChild(filenameInput);
+
+      const base64Input = document.createElement("input");
+      base64Input.type = "hidden";
+      base64Input.name = "base64";
+      base64Input.value = wboutBase64;
+      form.appendChild(base64Input);
+
+      document.body.appendChild(form);
+      form.submit();
+
+      setTimeout(() => {
+        try {
+          if (form.parentNode) {
+            form.parentNode.removeChild(form);
+          }
+        } catch (e) {}
+      }, 3000);
+    } catch (err: any) {
+      console.warn("Server-assisted download fallback to client blob:", err);
+      // Fallback
+      const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+      const blob = new Blob([wbout], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(() => {
+        try {
+          if (link.parentNode) link.parentNode.removeChild(link);
+          URL.revokeObjectURL(url);
+        } catch (e) {}
+      }, 60000);
+    }
   };
 
   // Export Kardex to Excel
