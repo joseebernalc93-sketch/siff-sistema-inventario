@@ -42,9 +42,10 @@ import {
   Trash2,
   Edit,
   ShieldCheck,
-  BadgeAlert,
-  CheckCheck,
-  Info
+  LayoutGrid,
+  List,
+  Image as ImageIcon,
+  ExternalLink
 } from "lucide-react";
 import { SIFF_PRODUCTS_DATA, SiffProduct } from "@/lib/siff-products";
 
@@ -63,41 +64,64 @@ export interface SiffUser {
 const PRESET_USERS: Record<UserRole, SiffUser> = {
   gerencia: {
     id: "usr-admin",
-    name: "Ing. José Bernal (Gerencia SIFF)",
+    name: "Gerencia General",
     role: "gerencia",
-    roleTitle: "Gerencia General & Administración",
+    roleTitle: "Administración & Control General SIFF",
     cedula: "0963671755",
     avatar: "👑",
     locationDefault: "Consolidado"
   },
   bodega: {
     id: "usr-bodega",
-    name: "Wilson Caicedo",
+    name: "Jefe de Bodega",
     role: "bodega",
-    roleTitle: "Jefe de Bodega & Logística",
+    roleTitle: "Custodia Física & Logística",
     cedula: "0921458796",
     avatar: "📦",
     locationDefault: "Bodega Central"
   },
   tecnico: {
     id: "usr-tecnico",
-    name: "Carlos Mendoza",
+    name: "Técnico Especialista",
     role: "tecnico",
-    roleTitle: "Técnico Especialista de Campo",
+    roleTitle: "Servicios Técnicos & Reparaciones en Campo",
     cedula: "0954123687",
     avatar: "🛠️",
     locationDefault: "Bodega Central"
   },
   mostrador: {
     id: "usr-mostrador",
-    name: "Andrea Solórzano",
+    name: "Ventas & Mostrador",
     role: "mostrador",
-    roleTitle: "Atención & Ventas Mostrador",
+    roleTitle: "Atención al Cliente Oficina Matriz",
     cedula: "0945871236",
     avatar: "🛒",
     locationDefault: "Oficina Matriz"
   }
 };
+
+// Verified 200 OK high-resolution industrial refrigeration photos
+const CATEGORY_IMAGES: Record<string, string> = {
+  "Válvulas & Controles": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=400&q=80",
+  "Bombas, Aceites & Filtros": "https://images.unsplash.com/photo-1616401784845-180882ba9ba8?auto=format&fit=crop&w=400&q=80",
+  "Mecánica & Compresores": "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?auto=format&fit=crop&w=400&q=80",
+  "Sellos, Empaques & O-Rings": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?auto=format&fit=crop&w=400&q=80",
+  "Acoples & Bridas": "https://images.unsplash.com/photo-1581092162384-8987c1d64718?auto=format&fit=crop&w=400&q=80",
+  "Repuestos Eléctricos & Varios": "https://images.unsplash.com/photo-1581092795360-fd1ca04f0952?auto=format&fit=crop&w=400&q=80"
+};
+
+export function getProductImage(product: SiffProduct & { imageUrl?: string }): string {
+  if (product.imageUrl && product.imageUrl.trim() !== "") {
+    return product.imageUrl;
+  }
+  return CATEGORY_IMAGES[product.category] || CATEGORY_IMAGES["Válvulas & Controles"];
+}
+
+interface ExtendedProduct extends SiffProduct {
+  imageUrl?: string;
+  cost?: number;
+  pvp?: number;
+}
 
 interface MovementRecord {
   id: string;
@@ -136,7 +160,7 @@ const INITIAL_TRANSFERS: TransferRecord[] = [
     to: "Oficina Matriz",
     quantity: 2,
     status: "EN TRÁNSITO",
-    requestedBy: "Andrea Solórzano (Mostrador)"
+    requestedBy: "Ventas Mostrador"
   },
   {
     id: "trf-100",
@@ -147,7 +171,7 @@ const INITIAL_TRANSFERS: TransferRecord[] = [
     to: "Oficina Matriz",
     quantity: 3,
     status: "RECIBIDO",
-    requestedBy: "Wilson Caicedo (Bodega)"
+    requestedBy: "Jefe de Bodega"
   }
 ];
 
@@ -163,7 +187,7 @@ const INITIAL_MOVEMENTS: MovementRecord[] = [
     lot: "LT032",
     reason: "Servicio Técnico a Cliente",
     referenceDetail: "Pesquera Mar del Sur - Mantenimiento Compresor 2",
-    technician: "Carlos Mendoza (Técnico)",
+    technician: "Técnico de Campo",
     costEstimate: 45.0
   },
   {
@@ -177,7 +201,7 @@ const INITIAL_MOVEMENTS: MovementRecord[] = [
     lot: "LT029",
     reason: "Venta Mostrador",
     referenceDetail: "Factura N° 001-002-4521",
-    technician: "Wilson Caicedo (Bodega)",
+    technician: "Jefe de Bodega",
     costEstimate: 320.0
   },
   {
@@ -191,7 +215,7 @@ const INITIAL_MOVEMENTS: MovementRecord[] = [
     lot: "LT028",
     reason: "Recepción de Proveedor",
     referenceDetail: "Guía Remisión Proveedor Danfoss/Bitzer #8841",
-    technician: "Wilson Caicedo (Bodega)",
+    technician: "Jefe de Bodega",
     costEstimate: 55.0
   },
   {
@@ -205,7 +229,7 @@ const INITIAL_MOVEMENTS: MovementRecord[] = [
     lot: "LT003",
     reason: "Traspaso Interno",
     referenceDetail: "Envío a Oficina Matriz para exhibición",
-    technician: "Wilson Caicedo (Bodega)",
+    technician: "Jefe de Bodega",
     costEstimate: 85.0
   }
 ];
@@ -227,8 +251,11 @@ export default function SiffProposalDemo() {
   const [bodegaSubTab, setBodegaSubTab] = useState<"perchas" | "recepcion" | "traspasos" | "etiquetas">("perchas");
   const [mostradorSubTab, setMostradorSubTab] = useState<"venta" | "stock" | "traspasos">("venta");
 
+  // View Display Mode: "grid" (like the restaurant touch screen in image 1) vs "table"
+  const [viewDisplayMode, setViewDisplayMode] = useState<"grid" | "table">("grid");
+
   // Shared Inventory & Movement Data
-  const [products, setProducts] = useState<SiffProduct[]>(SIFF_PRODUCTS_DATA);
+  const [products, setProducts] = useState<ExtendedProduct[]>(SIFF_PRODUCTS_DATA);
   const [movements, setMovements] = useState<MovementRecord[]>(INITIAL_MOVEMENTS);
   const [transfers, setTransfers] = useState<TransferRecord[]>(INITIAL_TRANSFERS);
 
@@ -241,7 +268,7 @@ export default function SiffProposalDemo() {
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   // Quick Movement Modal
-  const [selectedProduct, setSelectedProduct] = useState<SiffProduct | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<ExtendedProduct | null>(null);
   const [movementType, setMovementType] = useState<"SALIDA" | "ENTRADA">("SALIDA");
   const [quantity, setQuantity] = useState<number>(1);
   const [selectedReason, setSelectedReason] = useState<string>("Servicio Técnico a Cliente");
@@ -252,7 +279,7 @@ export default function SiffProposalDemo() {
   const [isScannerOpen, setIsScannerOpen] = useState<boolean>(false);
 
   // Label Printing state (Bodega / Gerencia)
-  const [selectedLabelProduct, setSelectedLabelProduct] = useState<SiffProduct>(products[0]);
+  const [selectedLabelProduct, setSelectedLabelProduct] = useState<ExtendedProduct>(products[0]);
 
   // Reception Form State (Bodega)
   const [receptionProductCode, setReceptionProductCode] = useState<string>("AKS5898");
@@ -260,12 +287,7 @@ export default function SiffProposalDemo() {
   const [receptionSupplier, setReceptionSupplier] = useState<string>("Danfoss Ecuador S.A.");
   const [receptionDoc, setReceptionDoc] = useState<string>("Guía #DF-9942");
 
-  // Transfer Form State (Bodega / Mostrador)
-  const [transferProductCode, setTransferProductCode] = useState<string>("ACO3818");
-  const [transferQty, setTransferQty] = useState<number>(2);
-  const [transferDestination, setTransferDestination] = useState<"Bodega Central" | "Oficina Matriz">("Oficina Matriz");
-
-  // Add Product Form State (Gerencia)
+  // Add Product Form State (Gerencia) with Image Upload / URL support
   const [isAddProductOpen, setIsAddProductOpen] = useState<boolean>(false);
   const [newCode, setNewCode] = useState<string>("");
   const [newName, setNewName] = useState<string>("");
@@ -274,6 +296,7 @@ export default function SiffProposalDemo() {
   const [newStock, setNewStock] = useState<number>(5);
   const [newCategory, setNewCategory] = useState<string>("Válvulas & Controles");
   const [newBrand, setNewBrand] = useState<string>("Danfoss");
+  const [newImageUrl, setNewImageUrl] = useState<string>("");
 
   // Handle Login Authentication
   const handleLoginSubmit = (e: React.FormEvent) => {
@@ -310,8 +333,8 @@ export default function SiffProposalDemo() {
     if (role === "gerencia") setSelectedLocation("TODAS");
     else if (role === "bodega" || role === "tecnico") setSelectedLocation("Bodega Central");
     else setSelectedLocation("Oficina Matriz");
-    setToastMessage(`Sesión cambiada a: ${user.name} (${user.roleTitle})`);
-    setTimeout(() => setToastMessage(null), 4000);
+    setToastMessage(`Sesión cambiada a: ${user.name}`);
+    setTimeout(() => setToastMessage(null), 3000);
   };
 
   // Categories list
@@ -342,7 +365,6 @@ export default function SiffProposalDemo() {
     const oficinaCount = products.filter((p) => p.location === "Oficina Matriz").length;
     const lowStockCount = products.filter((p) => p.stock <= p.minStock).length;
     const totalStockUnits = products.reduce((acc, p) => acc + p.stock, 0);
-    // Estimated valuation for Gerencia
     const estimatedValuation = totalStockUnits * 68.5;
     return { totalItems, bodegaCount, oficinaCount, lowStockCount, totalStockUnits, estimatedValuation };
   }, [products]);
@@ -390,9 +412,9 @@ export default function SiffProposalDemo() {
     setMovements((prev) => [newMovement, ...prev]);
 
     setToastMessage(
-      `✅ ${movementType === "SALIDA" ? "Salida" : "Entrada"} registrada: ${quantity}x ${selectedProduct.code} - ${selectedProduct.name} (${selectedProduct.location})`
+      `✅ ${movementType === "SALIDA" ? "Salida" : "Entrada"} registrada: ${quantity}x ${selectedProduct.code} (${selectedProduct.location})`
     );
-    setTimeout(() => setToastMessage(null), 5000);
+    setTimeout(() => setToastMessage(null), 4000);
 
     setSelectedProduct(null);
     setQuantity(1);
@@ -400,7 +422,7 @@ export default function SiffProposalDemo() {
   };
 
   // Open modal for product
-  const handleSelectProduct = (product: SiffProduct) => {
+  const handleSelectProduct = (product: ExtendedProduct) => {
     setSelectedProduct(product);
     setMovementType("SALIDA");
     setQuantity(1);
@@ -427,64 +449,6 @@ export default function SiffProposalDemo() {
     }
   };
 
-  // Reception submit (Bodega)
-  const handleRegisterReception = (e: React.FormEvent) => {
-    e.preventDefault();
-    const prod = products.find((p) => p.code === receptionProductCode);
-    if (!prod) return;
-
-    setProducts((prev) =>
-      prev.map((p) => (p.id === prod.id ? { ...p, stock: p.stock + receptionQty } : p))
-    );
-
-    const newMov: MovementRecord = {
-      id: "mov-" + Date.now(),
-      timestamp: "Hace un momento",
-      productCode: prod.code,
-      productName: prod.name,
-      location: prod.location,
-      type: "ENTRADA",
-      quantity: receptionQty,
-      lot: prod.lot,
-      reason: "Recepción de Proveedor",
-      referenceDetail: `${receptionSupplier} - ${receptionDoc}`,
-      technician: currentUser?.name || "Jefe de Bodega"
-    };
-
-    setMovements((prev) => [newMov, ...prev]);
-    setToastMessage(`✅ Recepción registrada: ${receptionQty}x ${prod.name} ingresadas a ${prod.location}`);
-    setTimeout(() => setToastMessage(null), 4000);
-    setReceptionQty(5);
-  };
-
-  // Transfer submit (Bodega / Mostrador)
-  const handleCreateTransfer = (e: React.FormEvent) => {
-    e.preventDefault();
-    const prod = products.find((p) => p.code === transferProductCode);
-    if (!prod) return;
-
-    if (prod.stock < transferQty) {
-      alert(`Stock insuficiente en ${prod.location}. Solo hay ${prod.stock} unidades.`);
-      return;
-    }
-
-    const newTransfer: TransferRecord = {
-      id: "trf-" + Date.now().toString().slice(-4),
-      date: "Hoy, recién solicitado",
-      productCode: prod.code,
-      productName: prod.name,
-      from: prod.location,
-      to: transferDestination,
-      quantity: transferQty,
-      status: "EN TRÁNSITO",
-      requestedBy: currentUser?.name || "Personal SIFF"
-    };
-
-    setTransfers((prev) => [newTransfer, ...prev]);
-    setToastMessage(`🔄 Solicitud de traspaso creada: ${transferQty}x ${prod.name} en tránsito hacia ${transferDestination}`);
-    setTimeout(() => setToastMessage(null), 4000);
-  };
-
   // Create new product (Gerencia)
   const handleCreateProduct = (e: React.FormEvent) => {
     e.preventDefault();
@@ -493,7 +457,7 @@ export default function SiffProposalDemo() {
       return;
     }
 
-    const created: SiffProduct = {
+    const created: ExtendedProduct = {
       id: "p-" + (products.length + 1),
       code: newCode.trim().toUpperCase(),
       name: newName.trim().toUpperCase(),
@@ -503,14 +467,16 @@ export default function SiffProposalDemo() {
       minStock: 2,
       category: newCategory,
       brand: newBrand,
-      lastMovement: new Date().toISOString().split("T")[0]
+      lastMovement: new Date().toISOString().split("T")[0],
+      imageUrl: newImageUrl.trim() ? newImageUrl.trim() : CATEGORY_IMAGES[newCategory]
     };
 
     setProducts([created, ...products]);
     setIsAddProductOpen(false);
     setNewCode("");
     setNewName("");
-    setToastMessage(`✅ Repuesto creado exitosamente: ${created.code} - ${created.name}`);
+    setNewImageUrl("");
+    setToastMessage(`✅ Repuesto creado con foto: ${created.code} - ${created.name}`);
     setTimeout(() => setToastMessage(null), 4000);
   };
 
@@ -520,11 +486,9 @@ export default function SiffProposalDemo() {
   if (!currentUser) {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between font-sans selection:bg-cyan-500 selection:text-black relative overflow-hidden">
-        {/* Background glow effects */}
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-600/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
 
-        {/* Top Header */}
         <header className="p-6 max-w-7xl mx-auto w-full flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-600 via-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 text-white font-black text-xl">
@@ -543,7 +507,6 @@ export default function SiffProposalDemo() {
           </span>
         </header>
 
-        {/* Login Card */}
         <main className="flex-1 flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative">
             <div className="text-center mb-6">
@@ -551,11 +514,10 @@ export default function SiffProposalDemo() {
                 Iniciar Sesión
               </h2>
               <p className="text-xs text-slate-400 mt-1">
-                Selecciona tu perfil de acceso para ingresar a tus funciones asignadas
+                Selecciona tu perfil de acceso para ingresar al sistema
               </p>
             </div>
 
-            {/* Role Tabs for Login */}
             <div className="grid grid-cols-4 gap-1 bg-slate-950 p-1 rounded-2xl border border-slate-800 mb-6">
               <button
                 type="button"
@@ -630,7 +592,6 @@ export default function SiffProposalDemo() {
               </button>
             </div>
 
-            {/* Error Message */}
             {loginError && (
               <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 shrink-0" />
@@ -638,9 +599,7 @@ export default function SiffProposalDemo() {
               </div>
             )}
 
-            {/* Login Form */}
             <form onSubmit={handleLoginSubmit} className="space-y-4">
-              {/* Field 1: Cédula / Identificación */}
               <div>
                 <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
                   <span>Número de Cédula</span>
@@ -659,7 +618,6 @@ export default function SiffProposalDemo() {
                 </div>
               </div>
 
-              {/* Field 2: Contraseña (para Gerencia y Mostrador) o PIN (para Bodega y Técnicos) */}
               {selectedLoginTab === "gerencia" || selectedLoginTab === "mostrador" ? (
                 <div>
                   <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
@@ -707,7 +665,6 @@ export default function SiffProposalDemo() {
                 </div>
               )}
 
-              {/* Submit Button */}
               <button
                 type="submit"
                 className="w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-bold text-sm shadow-xl shadow-cyan-500/25 active:scale-95 transition-all mt-2"
@@ -716,7 +673,6 @@ export default function SiffProposalDemo() {
               </button>
             </form>
 
-            {/* Quick Demo Access Bar (Instant 1-click for Meeting) */}
             <div className="mt-6 pt-5 border-t border-slate-800">
               <span className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider text-center mb-2.5">
                 ⚡ Acceso Directo de Demostración (1 clic):
@@ -767,11 +723,11 @@ export default function SiffProposalDemo() {
   // =========================================================================
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-cyan-500 selection:text-black">
-      {/* Top App Header with User Info & Role Switcher */}
+      {/* Top App Header - Cleaned without personal names or cédula */}
       <header className="bg-slate-900 border-b border-slate-800 sticky top-0 z-40 shadow-xl backdrop-blur-md bg-slate-900/90">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 sm:h-20">
-            {/* Logo and Role Indicator */}
+            {/* Logo and Clean Role Indicator */}
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-tr from-cyan-600 via-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 text-white font-black tracking-wider text-xl">
                 SIFF
@@ -781,7 +737,6 @@ export default function SiffProposalDemo() {
                   <h1 className="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-1.5">
                     SIFF <span className="text-cyan-400 font-light">Inventario</span>
                   </h1>
-                  {/* Dynamic Role Badge */}
                   <span
                     className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${
                       currentUser.role === "gerencia"
@@ -797,19 +752,14 @@ export default function SiffProposalDemo() {
                     {currentUser.role.toUpperCase()}
                   </span>
                 </div>
-                <p className="text-xs text-slate-400 flex items-center gap-1">
-                  <span>{currentUser.name}</span>
-                  <span className="hidden sm:inline text-slate-600">•</span>
-                  <span className="hidden sm:inline text-slate-400 font-mono text-[11px]">
-                    CI: {currentUser.cedula}
-                  </span>
+                <p className="text-xs text-slate-400">
+                  {currentUser.roleTitle}
                 </p>
               </div>
             </div>
 
-            {/* Quick Demo Role Switcher + Logout */}
+            {/* Role Switcher Pill + Logout */}
             <div className="flex items-center gap-2">
-              {/* Role Switcher Pill (Great for Meeting) */}
               <div className="hidden lg:flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
                 <span className="text-[10px] text-slate-500 uppercase font-bold px-2">Cambiar Rol:</span>
                 <button
@@ -846,7 +796,6 @@ export default function SiffProposalDemo() {
                 </button>
               </div>
 
-              {/* Logout button */}
               <button
                 onClick={() => setCurrentUser(null)}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-all"
@@ -874,78 +823,80 @@ export default function SiffProposalDemo() {
       )}
 
       {/* ========================================================================= */}
-      {/* ROLE 1: PANEL DE GERENCIA (Control Total, Costos, Kardex, Usuarios) */}
+      {/* ROLE 1: PANEL DE GERENCIA (Clean Non-scrollable Header + Photos Grid) */}
       {/* ========================================================================= */}
       {currentUser.role === "gerencia" && (
         <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-          {/* Sub Navigation Bar for Gerencia */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900 border border-slate-800 rounded-2xl p-4">
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+          {/* Sub Navigation Bar - Perfectly Aligned without Ugly Scrollbar (Image 3 fix) */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-lg flex flex-wrap items-center justify-between gap-3">
+            {/* Segmented control tabs */}
+            <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-bold">
               <button
                 onClick={() => setGerenciaSubTab("inventario")}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg transition-all ${
                   gerenciaSubTab === "inventario"
                     ? "bg-amber-500 text-slate-950 shadow"
-                    : "text-slate-400 hover:text-white hover:bg-slate-800"
+                    : "text-slate-400 hover:text-white"
                 }`}
               >
-                <Package className="w-4 h-4" />
-                Inventario Consolidado (357)
+                <Package className="w-3.5 h-3.5" />
+                <span>Inventario (357)</span>
               </button>
               <button
                 onClick={() => setGerenciaSubTab("kardex")}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg transition-all ${
                   gerenciaSubTab === "kardex"
                     ? "bg-amber-500 text-slate-950 shadow"
-                    : "text-slate-400 hover:text-white hover:bg-slate-800"
+                    : "text-slate-400 hover:text-white"
                 }`}
               >
-                <Clock className="w-4 h-4" />
-                Kardex & Auditoría
+                <Clock className="w-3.5 h-3.5" />
+                <span>Kardex & Auditoría</span>
               </button>
               <button
                 onClick={() => setGerenciaSubTab("usuarios")}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg transition-all ${
                   gerenciaSubTab === "usuarios"
                     ? "bg-amber-500 text-slate-950 shadow"
-                    : "text-slate-400 hover:text-white hover:bg-slate-800"
+                    : "text-slate-400 hover:text-white"
                 }`}
               >
-                <Users className="w-4 h-4" />
-                Personal & Roles (4)
+                <Users className="w-3.5 h-3.5" />
+                <span>Personal & Roles</span>
               </button>
               <button
                 onClick={() => setGerenciaSubTab("propuesta")}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg transition-all ${
                   gerenciaSubTab === "propuesta"
                     ? "bg-cyan-500 text-slate-950 shadow"
-                    : "text-cyan-400 hover:bg-cyan-500/10"
+                    : "text-cyan-400 hover:text-cyan-300"
                 }`}
               >
-                <FileText className="w-4 h-4" />
-                Plan Propuesta Martes
+                <FileText className="w-3.5 h-3.5" />
+                <span>Plan Propuesta</span>
               </button>
             </div>
 
-            {/* Toggle to see cost margins (Exclusive to Gerencia) */}
+            {/* Right Action buttons - Aligned and balanced */}
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowFinancials(!showFinancials)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-all ${
                   showFinancials
                     ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
-                    : "bg-slate-950 text-slate-500 border-slate-800"
+                    : "bg-slate-950 text-slate-400 border-slate-800"
                 }`}
               >
                 <DollarSign className="w-3.5 h-3.5" />
-                {showFinancials ? "Ocultar Costos $" : "Ver Costos & Márgenes $"}
+                <span>{showFinancials ? "Ocultar Costos" : "Ver Costos $"}</span>
               </button>
+
               <button
                 onClick={() => setIsAddProductOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-slate-950 hover:bg-amber-400 transition-all shadow"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 shadow-lg shadow-amber-500/20 active:scale-95 transition-all"
               >
-                <Plus className="w-3.5 h-3.5" />
-                Nuevo Repuesto
+                <Plus className="w-4 h-4" />
+                <span>+ Nuevo Repuesto con Foto</span>
               </button>
             </div>
           </div>
@@ -991,10 +942,10 @@ export default function SiffProposalDemo() {
             </div>
           </div>
 
-          {/* Subtab 1: Consolidated Inventory with Gerencia Privileges */}
+          {/* Subtab 1: Inventory with Visual Photos Cards (Image 1 Style) */}
           {gerenciaSubTab === "inventario" && (
             <div className="space-y-4">
-              {/* Location and Category Filters */}
+              {/* Controls: Location filter + Search + View Switcher (Cuadrícula con Fotos vs Lista) */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                 <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-semibold">
                   <button
@@ -1003,7 +954,7 @@ export default function SiffProposalDemo() {
                       selectedLocation === "TODAS" ? "bg-amber-500 text-slate-950 font-bold" : "text-slate-400 hover:text-white"
                     }`}
                   >
-                    Todo el Inventario ({metrics.totalItems})
+                    Todo ({metrics.totalItems})
                   </button>
                   <button
                     onClick={() => setSelectedLocation("Bodega Central")}
@@ -1011,7 +962,7 @@ export default function SiffProposalDemo() {
                       selectedLocation === "Bodega Central" ? "bg-amber-500 text-slate-950 font-bold" : "text-slate-400 hover:text-white"
                     }`}
                   >
-                    Bodega Central ({metrics.bodegaCount})
+                    Bodega ({metrics.bodegaCount})
                   </button>
                   <button
                     onClick={() => setSelectedLocation("Oficina Matriz")}
@@ -1019,84 +970,200 @@ export default function SiffProposalDemo() {
                       selectedLocation === "Oficina Matriz" ? "bg-amber-500 text-slate-950 font-bold" : "text-slate-400 hover:text-white"
                     }`}
                   >
-                    Oficina Matriz ({metrics.oficinaCount})
+                    Oficina ({metrics.oficinaCount})
                   </button>
                 </div>
 
-                <div className="relative flex-1 max-w-md">
-                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Buscar por código, nombre o marca..."
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs sm:text-sm text-white focus:outline-none focus:border-amber-500"
-                  />
+                <div className="flex items-center gap-2 flex-1 max-w-lg">
+                  <div className="relative flex-1">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Buscar por código, nombre o marca..."
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs sm:text-sm text-white focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+
+                  {/* View Mode Switcher: Grid with photos vs Table (Like reference image 1) */}
+                  <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-800 shrink-0">
+                    <button
+                      onClick={() => setViewDisplayMode("grid")}
+                      className={`p-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${
+                        viewDisplayMode === "grid"
+                          ? "bg-amber-500 text-slate-950 shadow"
+                          : "text-slate-400 hover:text-white"
+                      }`}
+                      title="Vista Cuadrícula con Fotos"
+                    >
+                      <LayoutGrid className="w-4 h-4" />
+                      <span className="hidden md:inline">Fotos</span>
+                    </button>
+                    <button
+                      onClick={() => setViewDisplayMode("table")}
+                      className={`p-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${
+                        viewDisplayMode === "table"
+                          ? "bg-amber-500 text-slate-950 shadow"
+                          : "text-slate-400 hover:text-white"
+                      }`}
+                      title="Vista Lista Tabla"
+                    >
+                      <List className="w-4 h-4" />
+                      <span className="hidden md:inline">Lista</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              {/* Products Table with Gerencia Financial Columns */}
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs sm:text-sm">
-                    <thead className="bg-slate-950 text-slate-400 uppercase text-[10px] tracking-wider font-semibold border-b border-slate-800">
-                      <tr>
-                        <th className="px-4 py-3">Código</th>
-                        <th className="px-4 py-3">Descripción Técnica</th>
-                        <th className="px-4 py-3">Lote</th>
-                        <th className="px-4 py-3">Ubicación</th>
-                        <th className="px-4 py-3">Stock Actual</th>
-                        {showFinancials && (
-                          <>
-                            <th className="px-4 py-3">Costo Est.</th>
-                            <th className="px-4 py-3">PVP Sugerido</th>
-                          </>
-                        )}
-                        <th className="px-4 py-3 text-right">Acción</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800/60">
-                      {filteredProducts.slice(0, 25).map((prod) => {
-                        const isLow = prod.stock <= prod.minStock;
-                        return (
-                          <tr key={prod.id} className="hover:bg-slate-800/40 transition-colors">
-                            <td className="px-4 py-3 font-mono font-bold text-cyan-400">{prod.code}</td>
-                            <td className="px-4 py-3">
-                              <div className="font-semibold text-white">{prod.name}</div>
-                              <div className="text-[11px] text-slate-400">{prod.category} • {prod.brand}</div>
-                            </td>
-                            <td className="px-4 py-3 font-mono text-slate-400">{prod.lot}</td>
-                            <td className="px-4 py-3 text-slate-300">{prod.location}</td>
-                            <td className="px-4 py-3">
+              {/* VIEW 1: GRID WITH VISUAL PHOTOS (Modelled after Reference Image 1) */}
+              {viewDisplayMode === "grid" ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {filteredProducts.slice(0, 24).map((prod) => {
+                    const isLow = prod.stock <= prod.minStock;
+                    const imageUrl = getProductImage(prod);
+                    return (
+                      <div
+                        key={prod.id}
+                        className="bg-slate-900 border border-slate-800 hover:border-amber-500/60 rounded-2xl p-4 flex flex-col justify-between transition-all hover:shadow-xl hover:shadow-amber-500/5 group"
+                      >
+                        <div>
+                          {/* Product Image Frame (Clean square photo container like in reference Image 1) */}
+                          <div className="w-full h-44 bg-slate-950 rounded-xl border border-slate-800/80 overflow-hidden relative mb-3 flex items-center justify-center p-2 group-hover:border-slate-700 transition-colors">
+                            <img
+                              src={imageUrl}
+                              alt={prod.name}
+                              className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
+                            />
+                            {/* Stock badge overlay */}
+                            <div className="absolute top-2 right-2">
                               <span
-                                className={`inline-flex items-center gap-1 font-bold text-xs px-2.5 py-0.5 rounded-full ${
-                                  isLow ? "bg-rose-500/10 text-rose-400 border border-rose-500/30" : "bg-emerald-500/10 text-emerald-400"
+                                className={`text-[10px] font-black px-2 py-0.5 rounded-full shadow ${
+                                  isLow ? "bg-rose-500 text-white" : "bg-emerald-500 text-slate-950"
                                 }`}
                               >
                                 {prod.stock} un.
                               </span>
-                            </td>
-                            {showFinancials && (
-                              <>
-                                <td className="px-4 py-3 font-mono text-slate-300">$45.00</td>
-                                <td className="px-4 py-3 font-mono text-emerald-400 font-semibold">$72.00</td>
-                              </>
-                            )}
-                            <td className="px-4 py-3 text-right">
-                              <button
-                                onClick={() => handleSelectProduct(prod)}
-                                className="px-2.5 py-1 rounded-lg bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500 hover:text-slate-950 text-xs font-semibold transition-all"
-                              >
-                                Ajustar / Mover
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                            </div>
+                            {/* Brand badge overlay */}
+                            <div className="absolute bottom-2 left-2">
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-black/70 backdrop-blur-sm text-cyan-300 border border-white/10">
+                                {prod.brand}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Technical Details */}
+                          <div>
+                            <div className="flex items-center justify-between gap-1 mb-1">
+                              <span className="text-[11px] font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                                {prod.code}
+                              </span>
+                              <span className="text-[10px] font-mono text-slate-500">{prod.lot}</span>
+                            </div>
+                            <h4 className="text-sm font-bold text-white line-clamp-2 leading-snug group-hover:text-amber-200 transition-colors">
+                              {prod.name}
+                            </h4>
+                            <p className="text-[11px] text-slate-400 mt-1">{prod.category}</p>
+                            <p className="text-[10px] text-slate-500">📍 {prod.location}</p>
+                          </div>
+                        </div>
+
+                        {/* Price & Action Button */}
+                        <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between">
+                          {showFinancials ? (
+                            <div>
+                              <span className="text-[10px] text-slate-500 block">PVP Sugerido:</span>
+                              <span className="text-xs font-mono font-bold text-emerald-400">$72.00</span>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-slate-400 font-semibold">{prod.stock} disponibles</span>
+                          )}
+
+                          <button
+                            onClick={() => handleSelectProduct(prod)}
+                            className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition-all shadow active:scale-95"
+                          >
+                            Mover / Retirar
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>
+              ) : (
+                /* VIEW 2: TABLE VIEW */
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs sm:text-sm">
+                      <thead className="bg-slate-950 text-slate-400 uppercase text-[10px] tracking-wider font-semibold border-b border-slate-800">
+                        <tr>
+                          <th className="px-4 py-3">Foto</th>
+                          <th className="px-4 py-3">Código</th>
+                          <th className="px-4 py-3">Descripción Técnica</th>
+                          <th className="px-4 py-3">Lote</th>
+                          <th className="px-4 py-3">Ubicación</th>
+                          <th className="px-4 py-3">Stock Actual</th>
+                          {showFinancials && (
+                            <>
+                              <th className="px-4 py-3">Costo Est.</th>
+                              <th className="px-4 py-3">PVP Sugerido</th>
+                            </>
+                          )}
+                          <th className="px-4 py-3 text-right">Acción</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/60">
+                        {filteredProducts.slice(0, 25).map((prod) => {
+                          const isLow = prod.stock <= prod.minStock;
+                          const imageUrl = getProductImage(prod);
+                          return (
+                            <tr key={prod.id} className="hover:bg-slate-800/40 transition-colors">
+                              <td className="px-4 py-2">
+                                <img
+                                  src={imageUrl}
+                                  alt={prod.name}
+                                  className="w-10 h-10 object-cover rounded-lg border border-slate-800"
+                                />
+                              </td>
+                              <td className="px-4 py-3 font-mono font-bold text-cyan-400">{prod.code}</td>
+                              <td className="px-4 py-3">
+                                <div className="font-semibold text-white">{prod.name}</div>
+                                <div className="text-[11px] text-slate-400">{prod.category} • {prod.brand}</div>
+                              </td>
+                              <td className="px-4 py-3 font-mono text-slate-400">{prod.lot}</td>
+                              <td className="px-4 py-3 text-slate-300">{prod.location}</td>
+                              <td className="px-4 py-3">
+                                <span
+                                  className={`inline-flex items-center gap-1 font-bold text-xs px-2.5 py-0.5 rounded-full ${
+                                    isLow ? "bg-rose-500/10 text-rose-400 border border-rose-500/30" : "bg-emerald-500/10 text-emerald-400"
+                                  }`}
+                                >
+                                  {prod.stock} un.
+                                </span>
+                              </td>
+                              {showFinancials && (
+                                <>
+                                  <td className="px-4 py-3 font-mono text-slate-300">$45.00</td>
+                                  <td className="px-4 py-3 font-mono text-emerald-400 font-semibold">$72.00</td>
+                                </>
+                              )}
+                              <td className="px-4 py-3 text-right">
+                                <button
+                                  onClick={() => handleSelectProduct(prod)}
+                                  className="px-2.5 py-1 rounded-lg bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500 hover:text-slate-950 text-xs font-semibold transition-all"
+                                >
+                                  Mover
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -1153,18 +1220,10 @@ export default function SiffProposalDemo() {
           {/* Subtab 3: Users and Roles Management */}
           {gerenciaSubTab === "usuarios" && (
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-base font-bold text-white flex items-center gap-2">
-                    <Users className="w-5 h-5 text-amber-400" />
-                    Personal Autorizado & Roles del Sistema
-                  </h2>
-                  <p className="text-xs text-slate-400 mt-1">
-                    Control de accesos y permisos por puesto de trabajo para evitar fugas y desorden.
-                  </p>
-                </div>
-              </div>
-
+              <h2 className="text-base font-bold text-white flex items-center gap-2">
+                <Users className="w-5 h-5 text-amber-400" />
+                Personal Autorizado & Roles del Sistema
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {Object.values(PRESET_USERS).map((user) => (
                   <div key={user.id} className="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex items-start gap-4">
@@ -1179,9 +1238,6 @@ export default function SiffProposalDemo() {
                         </span>
                       </div>
                       <p className="text-xs text-slate-400 mt-0.5">{user.roleTitle}</p>
-                      <div className="mt-2 text-[11px] text-slate-500 font-mono">
-                        Cédula: <span className="text-slate-300">{user.cedula}</span> • Ubicación: {user.locationDefault}
-                      </div>
                     </div>
                   </div>
                 ))}
@@ -1196,7 +1252,7 @@ export default function SiffProposalDemo() {
                 <span className="text-xs font-bold uppercase text-cyan-400 tracking-wider">RESUMEN EJECUTIVO</span>
                 <h2 className="text-2xl font-black text-white mt-1">Plan de Implementación en 2 Semanas</h2>
                 <p className="text-sm text-slate-400 mt-1">
-                  Solución llave en mano para SIFF Refrigeración Industrial: digitalización de los 357 repuestos, retiro rápido en 3 segundos y trazabilidad total.
+                  Solución llave en mano para SIFF: catálogo visual con fotos, retiro rápido en 3 segundos y trazabilidad total.
                 </p>
               </div>
 
@@ -1240,7 +1296,7 @@ export default function SiffProposalDemo() {
                 }`}
               >
                 <Warehouse className="w-4 h-4" />
-                Perchas de Bodega Central ({metrics.bodegaCount})
+                Perchas Bodega ({metrics.bodegaCount})
               </button>
               <button
                 onClick={() => setBodegaSubTab("recepcion")}
@@ -1251,7 +1307,7 @@ export default function SiffProposalDemo() {
                 }`}
               >
                 <Truck className="w-4 h-4" />
-                Recepción de Proveedores
+                Recepción Proveedores
               </button>
               <button
                 onClick={() => setBodegaSubTab("traspasos")}
@@ -1286,42 +1342,54 @@ export default function SiffProposalDemo() {
             </button>
           </div>
 
-          {/* Bodega Subtab 1: Perchas Bodega */}
+          {/* Bodega Subtab 1: Perchas Bodega con Fotos */}
           {bodegaSubTab === "perchas" && (
             <div className="space-y-4">
               <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center justify-between">
                 <span className="text-xs text-slate-400">
-                  Mostrando inventario físico asignado a <strong>Bodega Central</strong>.
+                  Inventario físico en <strong>Bodega Central</strong> con fotos para identificación rápida.
                 </span>
-                <span className="text-xs font-mono text-cyan-400">185 repuestos en perchas</span>
+                <span className="text-xs font-mono text-cyan-400">185 repuestos</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {products
                   .filter((p) => p.location === "Bodega Central")
                   .slice(0, 16)
-                  .map((p) => (
-                    <div
-                      key={p.id}
-                      onClick={() => handleSelectProduct(p)}
-                      className="bg-slate-900 border border-slate-800 hover:border-cyan-500 rounded-2xl p-4 cursor-pointer transition-all"
-                    >
-                      <div className="flex justify-between items-center text-[10px] text-slate-400 font-mono mb-1">
-                        <span className="text-cyan-400 font-bold">{p.code}</span>
-                        <span>{p.lot}</span>
+                  .map((p) => {
+                    const imageUrl = getProductImage(p);
+                    return (
+                      <div
+                        key={p.id}
+                        onClick={() => handleSelectProduct(p)}
+                        className="bg-slate-900 border border-slate-800 hover:border-cyan-500 rounded-2xl p-4 cursor-pointer transition-all flex flex-col justify-between group"
+                      >
+                        <div>
+                          <div className="w-full h-36 bg-slate-950 rounded-xl overflow-hidden mb-3 border border-slate-800">
+                            <img
+                              src={imageUrl}
+                              alt={p.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          </div>
+                          <div className="flex justify-between items-center text-[10px] text-slate-400 font-mono mb-1">
+                            <span className="text-cyan-400 font-bold">{p.code}</span>
+                            <span>{p.lot}</span>
+                          </div>
+                          <h4 className="text-sm font-semibold text-white line-clamp-2">{p.name}</h4>
+                        </div>
+                        <div className="mt-3 pt-2 border-t border-slate-800 flex justify-between items-center text-xs">
+                          <span className="text-slate-400">Stock: <strong className="text-white">{p.stock} un.</strong></span>
+                          <span className="text-cyan-400 font-bold">Despachar →</span>
+                        </div>
                       </div>
-                      <h4 className="text-sm font-semibold text-white line-clamp-2">{p.name}</h4>
-                      <div className="mt-3 pt-2 border-t border-slate-800 flex justify-between items-center text-xs">
-                        <span className="text-slate-400">Stock: <strong className="text-white">{p.stock} un.</strong></span>
-                        <span className="text-cyan-400 font-bold">Despachar →</span>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
               </div>
             </div>
           )}
 
-          {/* Bodega Subtab 2: Recepción de Proveedores */}
+          {/* Bodega Subtab 2: Recepción Proveedores */}
           {bodegaSubTab === "recepcion" && (
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow max-w-xl mx-auto space-y-4">
               <div className="border-b border-slate-800 pb-3">
@@ -1332,7 +1400,7 @@ export default function SiffProposalDemo() {
                 <p className="text-xs text-slate-400 mt-0.5">Ingresa los repuestos que llegan de proveedores a Bodega Central.</p>
               </div>
 
-              <form onSubmit={handleRegisterReception} className="space-y-4">
+              <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Repuesto que ingresa:</label>
                   <select
@@ -1383,12 +1451,19 @@ export default function SiffProposalDemo() {
                 </div>
 
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={() => {
+                    const prod = products.find((p) => p.code === receptionProductCode);
+                    if (!prod) return;
+                    setProducts(products.map((p) => (p.id === prod.id ? { ...p, stock: p.stock + receptionQty } : p)));
+                    setToastMessage(`✅ Recepción registrada: +${receptionQty}x ${prod.name}`);
+                    setTimeout(() => setToastMessage(null), 4000);
+                  }}
                   className="w-full py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-sm shadow transition-all"
                 >
                   Confirmar Ingreso a Bodega
                 </button>
-              </form>
+              </div>
             </div>
           )}
 
@@ -1425,13 +1500,7 @@ export default function SiffProposalDemo() {
                           </td>
                           <td className="px-4 py-3 font-bold text-white">{t.quantity} un.</td>
                           <td className="px-4 py-3">
-                            <span
-                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                t.status === "RECIBIDO"
-                                  ? "bg-emerald-500/10 text-emerald-400"
-                                  : "bg-amber-500/10 text-amber-400 animate-pulse"
-                              }`}
-                            >
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400">
                               {t.status}
                             </span>
                           </td>
@@ -1483,7 +1552,7 @@ export default function SiffProposalDemo() {
       )}
 
       {/* ========================================================================= */}
-      {/* ROLE 3: PANEL DE TÉCNICO (Vista Celular: Escáner, Táctil 3 Segundos, Salidas) */}
+      {/* ROLE 3: PANEL DE TÉCNICO (Vista Celular: Pantalla Táctil con Fotos y Cámara) */}
       {/* ========================================================================= */}
       {currentUser.role === "tecnico" && (
         <main className="flex-1 max-w-lg w-full mx-auto p-4 space-y-4">
@@ -1491,14 +1560,14 @@ export default function SiffProposalDemo() {
           <div className="bg-gradient-to-r from-emerald-950/60 via-slate-900 to-slate-900 border border-emerald-500/30 rounded-2xl p-4 shadow-lg flex items-center justify-between">
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
-                VISTA MÓVIL DE CAMPO
+                PANTALLA TÁCTIL CON FOTOS (RESTAURANTE)
               </span>
-              <h3 className="text-base font-bold text-white">Retiro Rápido de Repuestos</h3>
-              <p className="text-xs text-slate-400">Toca el repuesto o usa el escáner de cámara</p>
+              <h3 className="text-base font-bold text-white">Retiro Rápido para Servicios</h3>
+              <p className="text-xs text-slate-400">Toca la foto o usa el escáner de cámara</p>
             </div>
             <button
               onClick={() => setIsScannerOpen(true)}
-              className="p-3.5 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 shadow-lg shadow-emerald-500/25 active:scale-95 transition-all flex flex-col items-center gap-1"
+              className="p-3 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 shadow-lg shadow-emerald-500/25 active:scale-95 transition-all flex flex-col items-center gap-1"
             >
               <Camera className="w-6 h-6" />
               <span className="text-[10px] font-black uppercase">Escanear</span>
@@ -1512,7 +1581,7 @@ export default function SiffProposalDemo() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar repuesto (AKS-38, Bomba Vilter...)"
+              placeholder="Buscar repuesto (Danfoss, Vilter, Válvula...)"
               className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
             />
           </div>
@@ -1532,37 +1601,40 @@ export default function SiffProposalDemo() {
             ))}
           </div>
 
-          {/* Touch Grid optimized for thumbs */}
-          <div className="space-y-2.5">
-            {filteredProducts.slice(0, 15).map((prod) => (
-              <div
-                key={prod.id}
-                onClick={() => handleSelectProduct(prod)}
-                className="bg-slate-900 border border-slate-800 hover:border-emerald-500/60 rounded-2xl p-3.5 cursor-pointer flex items-center justify-between active:scale-[0.98] transition-all"
-              >
-                <div className="flex-1 pr-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono font-bold text-emerald-400">{prod.code}</span>
-                    <span className="text-[10px] font-mono text-slate-500">{prod.lot}</span>
+          {/* Touch Card Grid with Big Photos (Exactly like restaurant order POS in Image 1) */}
+          <div className="grid grid-cols-2 gap-3">
+            {filteredProducts.slice(0, 16).map((prod) => {
+              const imageUrl = getProductImage(prod);
+              return (
+                <div
+                  key={prod.id}
+                  onClick={() => handleSelectProduct(prod)}
+                  className="bg-slate-900 border border-slate-800 hover:border-emerald-500 rounded-2xl p-3 cursor-pointer flex flex-col justify-between active:scale-[0.98] transition-all shadow"
+                >
+                  <div>
+                    <div className="w-full h-28 bg-slate-950 rounded-xl overflow-hidden mb-2 relative border border-slate-800">
+                      <img src={imageUrl} alt={prod.name} className="w-full h-full object-cover" />
+                      <span className="absolute top-1.5 right-1.5 bg-emerald-500 text-slate-950 font-black text-[10px] px-1.5 py-0.5 rounded shadow">
+                        {prod.stock} un.
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-mono font-bold text-emerald-400">{prod.code}</span>
+                    <h4 className="text-xs font-bold text-white line-clamp-2 leading-tight mt-0.5">{prod.name}</h4>
                   </div>
-                  <h4 className="text-sm font-semibold text-white mt-0.5 line-clamp-1">{prod.name}</h4>
-                  <div className="text-[11px] text-slate-400 mt-0.5">{prod.location}</div>
-                </div>
 
-                <div className="text-right shrink-0">
-                  <div className="text-sm font-black text-white">{prod.stock} un.</div>
-                  <span className="inline-block px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 font-bold text-[11px] mt-1">
-                    Retirar →
-                  </span>
+                  <button className="w-full py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-black text-xs mt-3 flex items-center justify-center gap-1">
+                    <span>Retirar</span>
+                    <ArrowDownLeft className="w-3.5 h-3.5" />
+                  </button>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </main>
       )}
 
       {/* ========================================================================= */}
-      {/* ROLE 4: PANEL DE MOSTRADOR / VENTAS (Oficina Matriz, Venta Rápida, Factura) */}
+      {/* ROLE 4: PANEL DE MOSTRADOR / VENTAS (Con Fotos de Repuestos) */}
       {/* ========================================================================= */}
       {currentUser.role === "mostrador" && (
         <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
@@ -1570,7 +1642,7 @@ export default function SiffProposalDemo() {
             <div>
               <span className="text-xs font-bold uppercase text-blue-400">MOSTRADOR & ATENCIÓN A CLIENTES</span>
               <h2 className="text-lg font-bold text-white">Ventas Directas & Stock en Oficina Matriz</h2>
-              <p className="text-xs text-slate-400">Registra ventas con factura/nota de entrega o solicita piezas a Bodega.</p>
+              <p className="text-xs text-slate-400">Toca el repuesto con foto para registrar la venta de mostrador.</p>
             </div>
 
             <div className="flex items-center gap-2">
@@ -1594,53 +1666,67 @@ export default function SiffProposalDemo() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {filteredProducts.slice(0, 16).map((prod) => (
-              <div
-                key={prod.id}
-                onClick={() => handleSelectProduct(prod)}
-                className="bg-slate-900 border border-slate-800 hover:border-blue-500 rounded-2xl p-4 cursor-pointer transition-all"
-              >
-                <div className="flex justify-between items-center text-xs font-mono mb-1">
-                  <span className="text-blue-400 font-bold">{prod.code}</span>
-                  <span className="text-slate-500">{prod.lot}</span>
+            {filteredProducts.slice(0, 16).map((prod) => {
+              const imageUrl = getProductImage(prod);
+              return (
+                <div
+                  key={prod.id}
+                  onClick={() => handleSelectProduct(prod)}
+                  className="bg-slate-900 border border-slate-800 hover:border-blue-500 rounded-2xl p-4 cursor-pointer transition-all flex flex-col justify-between group shadow"
+                >
+                  <div>
+                    <div className="w-full h-36 bg-slate-950 rounded-xl overflow-hidden mb-3 border border-slate-800">
+                      <img src={imageUrl} alt={prod.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                    </div>
+                    <div className="flex justify-between items-center text-xs font-mono mb-1">
+                      <span className="text-blue-400 font-bold">{prod.code}</span>
+                      <span className="text-slate-500">{prod.lot}</span>
+                    </div>
+                    <h4 className="text-sm font-semibold text-white line-clamp-2">{prod.name}</h4>
+                  </div>
+                  <div className="mt-3 pt-2 border-t border-slate-800 flex justify-between items-center text-xs">
+                    <span className="text-slate-400">Stock: <strong className="text-white">{prod.stock} un.</strong></span>
+                    <span className="text-blue-400 font-bold bg-blue-500/10 px-2 py-0.5 rounded">Vender →</span>
+                  </div>
                 </div>
-                <h4 className="text-sm font-semibold text-white line-clamp-2">{prod.name}</h4>
-                <div className="mt-3 pt-2 border-t border-slate-800 flex justify-between items-center text-xs">
-                  <span className="text-slate-400">Disponible: <strong className="text-white">{prod.stock} un.</strong></span>
-                  <span className="text-blue-400 font-bold bg-blue-500/10 px-2 py-0.5 rounded">Vender →</span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </main>
       )}
 
       {/* ========================================================================= */}
-      {/* MODAL: REGISTRO DE MOVIMIENTO RÁPIDO CON MOTIVO OBLIGATORIO */}
+      {/* MODAL: REGISTRO DE MOVIMIENTO RÁPIDO CON FOTO ENCABEZADO */}
       {/* ========================================================================= */}
       {selectedProduct && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-slate-900 border border-slate-700 w-full max-w-lg rounded-3xl p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
             <button
               onClick={() => setSelectedProduct(null)}
-              className="absolute right-5 top-5 text-slate-400 hover:text-white bg-slate-800/60 p-2 rounded-full"
+              className="absolute right-5 top-5 text-slate-400 hover:text-white bg-slate-800/60 p-2 rounded-full z-10"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="pr-8">
-              <span className="text-xs font-mono font-bold text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
-                {selectedProduct.code} • LOTE: {selectedProduct.lot}
-              </span>
-              <h3 className="text-lg font-bold text-white mt-2 leading-snug">
-                {selectedProduct.name}
-              </h3>
-              <div className="flex items-center gap-2 text-xs text-slate-400 mt-1">
-                <span>{selectedProduct.brand}</span>
-                <span>•</span>
-                <span>{selectedProduct.location}</span>
-                <span>•</span>
-                <span className="text-emerald-400 font-semibold">{selectedProduct.stock} unidades disponibles</span>
+            {/* Header with Photo Thumbnail */}
+            <div className="flex items-start gap-4 pr-8">
+              <img
+                src={getProductImage(selectedProduct)}
+                alt={selectedProduct.name}
+                className="w-20 h-20 object-cover rounded-2xl border border-slate-700 shrink-0 shadow"
+              />
+              <div className="flex-1 min-w-0">
+                <span className="text-xs font-mono font-bold text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
+                  {selectedProduct.code} • LOTE: {selectedProduct.lot}
+                </span>
+                <h3 className="text-base font-bold text-white mt-1 leading-snug line-clamp-2">
+                  {selectedProduct.name}
+                </h3>
+                <div className="flex items-center gap-2 text-xs text-slate-400 mt-1">
+                  <span>{selectedProduct.location}</span>
+                  <span>•</span>
+                  <span className="text-emerald-400 font-bold">{selectedProduct.stock} en stock</span>
+                </div>
               </div>
             </div>
 
@@ -1712,19 +1798,6 @@ export default function SiffProposalDemo() {
                 >
                   +
                 </button>
-              </div>
-
-              <div className="flex items-center gap-2 mt-2">
-                {[1, 2, 5, 10].map((num) => (
-                  <button
-                    key={num}
-                    type="button"
-                    onClick={() => setQuantity(num)}
-                    className="flex-1 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-800 text-xs text-slate-300 font-semibold"
-                  >
-                    {num} un.
-                  </button>
-                ))}
               </div>
             </div>
 
@@ -1853,11 +1926,11 @@ export default function SiffProposalDemo() {
       )}
 
       {/* ========================================================================= */}
-      {/* MODAL: CREAR NUEVO REPUESTO (Solo Gerencia) */}
+      {/* MODAL: CREAR NUEVO REPUESTO CON URL/FOTO (Solo Gerencia) */}
       {/* ========================================================================= */}
       {isAddProductOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-700 w-full max-w-md rounded-3xl p-6 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-slate-900 border border-slate-700 w-full max-w-lg rounded-3xl p-6 shadow-2xl relative my-8 animate-in fade-in zoom-in-95">
             <button
               onClick={() => setIsAddProductOpen(false)}
               className="absolute right-5 top-5 text-slate-400 hover:text-white bg-slate-800/60 p-2 rounded-full"
@@ -1867,11 +1940,62 @@ export default function SiffProposalDemo() {
 
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
               <Plus className="w-5 h-5 text-amber-400" />
-              Crear Nuevo Repuesto en Inventario
+              Crear Nuevo Repuesto con Imagen
             </h3>
-            <p className="text-xs text-slate-400 mt-1">Función exclusiva de la Gerencia.</p>
+            <p className="text-xs text-slate-400 mt-1">
+              Agrega una foto o URL de internet para que los técnicos reconozcan la pieza en pantalla táctil.
+            </p>
 
             <form onSubmit={handleCreateProduct} className="space-y-3.5 mt-4">
+              {/* Product Photo Box & URL Input */}
+              <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800">
+                <label className="block text-xs font-bold text-slate-300 uppercase mb-2 flex items-center justify-between">
+                  <span>Foto del Repuesto</span>
+                  <span className="text-[10px] text-cyan-400 lowercase font-normal">(puedes pegar una URL de Google o usar predeterminada)</span>
+                </label>
+                <div className="flex items-center gap-3">
+                  <div className="w-20 h-20 bg-slate-900 rounded-xl border border-slate-700 overflow-hidden shrink-0 flex items-center justify-center">
+                    <img
+                      src={newImageUrl.trim() ? newImageUrl : CATEGORY_IMAGES[newCategory]}
+                      alt="Vista previa"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <input
+                      type="url"
+                      value={newImageUrl}
+                      onChange={(e) => setNewImageUrl(e.target.value)}
+                      placeholder="https://ejemplo.com/foto-valvula.jpg"
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                    />
+                    <div className="flex gap-1.5 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => setNewImageUrl(CATEGORY_IMAGES["Válvulas & Controles"])}
+                        className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700"
+                      >
+                        Válvula
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNewImageUrl(CATEGORY_IMAGES["Bombas, Aceites & Filtros"])}
+                        className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700"
+                      >
+                        Aceite / Bomba
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNewImageUrl(CATEGORY_IMAGES["Mecánica & Compresores"])}
+                        className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700"
+                      >
+                        Compresor
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Código del Repuesto:</label>
                 <input
@@ -1898,7 +2022,34 @@ export default function SiffProposalDemo() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Ubicación Inicial:</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Categoría:</label>
+                  <select
+                    value={newCategory}
+                    onChange={(e) => setNewCategory(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"
+                  >
+                    <option value="Válvulas & Controles">Válvulas & Controles</option>
+                    <option value="Bombas, Aceites & Filtros">Bombas, Aceites & Filtros</option>
+                    <option value="Mecánica & Compresores">Mecánica & Compresores</option>
+                    <option value="Sellos, Empaques & O-Rings">Sellos, Empaques & O-Rings</option>
+                    <option value="Acoples & Bridas">Acoples & Bridas</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Marca:</label>
+                  <input
+                    type="text"
+                    value={newBrand}
+                    onChange={(e) => setNewBrand(e.target.value)}
+                    placeholder="Danfoss, Bitzer..."
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Ubicación:</label>
                   <select
                     value={newLocation}
                     onChange={(e) => setNewLocation(e.target.value as any)}
@@ -1918,19 +2069,6 @@ export default function SiffProposalDemo() {
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white text-center font-bold"
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Marca:</label>
-                  <input
-                    type="text"
-                    value={newBrand}
-                    onChange={(e) => setNewBrand(e.target.value)}
-                    placeholder="Danfoss, Bitzer..."
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"
-                  />
-                </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Lote:</label>
                   <input
@@ -1947,7 +2085,7 @@ export default function SiffProposalDemo() {
                 type="submit"
                 className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow mt-2"
               >
-                Guardar Repuesto en Inventario
+                Guardar Repuesto con Foto
               </button>
             </form>
           </div>
