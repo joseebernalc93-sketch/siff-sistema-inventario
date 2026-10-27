@@ -14,6 +14,8 @@ import {
   Search,
   Printer,
   FileText,
+  FileSpreadsheet,
+  Upload,
   Smartphone,
   Laptop,
   Clock,
@@ -48,6 +50,7 @@ import {
   ArrowRight,
   RefreshCw
 } from "lucide-react";
+import * as XLSX from "xlsx-js-style";
 import { SIFF_PRODUCTS_DATA, SiffProduct } from "@/lib/siff-products";
 
 export type UserRole = "gerencia" | "bodega" | "tecnico" | "mostrador";
@@ -116,6 +119,146 @@ export function getProductImage(product: SiffProduct & { imageUrl?: string }): s
     return product.imageUrl;
   }
   return CATEGORY_IMAGES[product.category] || CATEGORY_IMAGES["Válvulas & Controles"];
+}
+
+
+// Smart Classifier for Category and Brand from technical description
+function inferCategoryAndBrand(name: string): { category: string; brand: string } {
+  const upper = (name || "").toUpperCase();
+  let brand = "Multimarca / OEM";
+  if (upper.includes("DANFOSS")) brand = "Danfoss";
+  else if (upper.includes("BITZER")) brand = "Bitzer";
+  else if (upper.includes("VILTER")) brand = "Vilter";
+  else if (upper.includes("MYCOM")) brand = "Mycom";
+  else if (upper.includes("FRICK")) brand = "Frick";
+  else if (upper.includes("COPELAND")) brand = "Copeland";
+  else if (upper.includes("CASTEL")) brand = "Castel";
+  else if (upper.includes("SPORLAN")) brand = "Sporlan";
+  else if (upper.includes("ALCO")) brand = "Alco";
+
+  let category = "Mecánica & Compresores";
+  if (
+    upper.includes("VALV") ||
+    upper.includes("VÁLV") ||
+    upper.includes("EXPANSION") ||
+    upper.includes("EXPANSIÓN") ||
+    upper.includes("SOLENOIDE") ||
+    upper.includes("PRESOSTATO") ||
+    upper.includes("TERMOSTATO") ||
+    upper.includes("AKS")
+  ) {
+    category = "Válvulas & Controles";
+  } else if (
+    upper.includes("ACEITE") ||
+    upper.includes("BOMBA") ||
+    upper.includes("FILTRO") ||
+    upper.includes("LUBRICANTE") ||
+    upper.includes("CARTRIDGE")
+  ) {
+    category = "Bombas, Aceites & Filtros";
+  } else if (
+    upper.includes("SELLO") ||
+    upper.includes("EMPAQUE") ||
+    upper.includes("O-RING") ||
+    upper.includes("ORING") ||
+    upper.includes("JUNTA") ||
+    upper.includes("GASKET")
+  ) {
+    category = "Sellos, Empaques & O-Rings";
+  } else if (
+    upper.includes("ACOPLE") ||
+    upper.includes("BRIDA") ||
+    upper.includes("FLANGE") ||
+    upper.includes("ARAÑA") ||
+    upper.includes("ARAÑAS")
+  ) {
+    category = "Acoples & Bridas";
+  } else if (
+    upper.includes("BOBINA") ||
+    upper.includes("SENSOR") ||
+    upper.includes("CABLE") ||
+    upper.includes("TERMIC") ||
+    upper.includes("RELE") ||
+    upper.includes("CONTACT")
+  ) {
+    category = "Repuestos Eléctricos & Varios";
+  }
+
+  return { category, brand };
+}
+
+// Parser for SIFF Excel Workbooks and generic spreadsheets
+function parseSiffWorkbook(wb: XLSX.WorkBook): ExtendedProduct[] {
+  const extracted: ExtendedProduct[] = [];
+  let currentId = 1;
+
+  function parseSheetRows(sheetName: string, defaultLocation: "Bodega Central" | "Oficina Matriz") {
+    const ws = wb.Sheets[sheetName];
+    if (!ws) return;
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1 }) as any[][];
+    const headerIdx = rows.findIndex((r) =>
+      r && r.some((c) => typeof c === "string" && (c.toUpperCase().includes("CÓDIGO") || c.toUpperCase().includes("CODIGO")))
+    );
+    if (headerIdx === -1) return;
+    const headers = rows[headerIdx].map((h) => String(h || "").trim().toUpperCase());
+
+    const codeIdx = headers.findIndex((h) => h.includes("CÓDIGO") || h.includes("CODIGO"));
+    const nameIdx = headers.findIndex((h) => h.includes("DESCRIPCI") || h.includes("NOMBRE") || h.includes("PRODUCTO"));
+    const lotIdx = headers.findIndex((h) => h.includes("LOTE"));
+    const stockIdx = headers.findIndex((h) => h.includes("STOCK"));
+    const entradasIdx = headers.findIndex((h) => h.includes("ENTRADAS"));
+    const salidasIdx = headers.findIndex((h) => h.includes("SALIDAS"));
+
+    for (let i = headerIdx + 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row || !row[codeIdx]) continue;
+      const code = String(row[codeIdx] || "").trim().toUpperCase();
+      if (!code || code === "TOTAL" || code.includes("CÓDIGO")) continue;
+
+      const name = String(row[nameIdx] || "").trim();
+      const lot = String(row[lotIdx] || "LT001").trim();
+      let stock = 0;
+      if (stockIdx !== -1 && row[stockIdx] !== undefined && row[stockIdx] !== null) {
+        stock = Number(row[stockIdx]) || 0;
+      } else if (entradasIdx !== -1 && salidasIdx !== -1) {
+        stock = (Number(row[entradasIdx]) || 0) - (Number(row[salidasIdx]) || 0);
+      }
+
+      const { category, brand } = inferCategoryAndBrand(name);
+      extracted.push({
+        id: `excel-${currentId++}`,
+        code,
+        name,
+        lot,
+        location: defaultLocation,
+        stock: Math.max(0, stock),
+        minStock: 2,
+        category,
+        brand,
+        lastMovement: new Date().toISOString().split("T")[0],
+        imageUrl: CATEGORY_IMAGES[category]
+      });
+    }
+  }
+
+  // 1. Detect SIFF Bodega sheet
+  const bodegaSheet = wb.SheetNames.find(
+    (n) => n.trim().toUpperCase().includes("BODEGA") && !n.toUpperCase().includes("ENTRADA") && !n.toUpperCase().includes("SALIDA")
+  );
+  if (bodegaSheet) parseSheetRows(bodegaSheet, "Bodega Central");
+
+  // 2. Detect SIFF Oficina sheet
+  const oficinaSheet = wb.SheetNames.find(
+    (n) => n.trim().toUpperCase().includes("OFICINA") && !n.toUpperCase().includes("ENTRADA") && !n.toUpperCase().includes("SALIDA")
+  );
+  if (oficinaSheet) parseSheetRows(oficinaSheet, "Oficina Matriz");
+
+  // 3. Fallback: If neither was detected, parse first available sheet
+  if (extracted.length === 0 && wb.SheetNames.length > 0) {
+    parseSheetRows(wb.SheetNames[0], "Bodega Central");
+  }
+
+  return extracted;
 }
 
 interface ExtendedProduct extends SiffProduct {
@@ -278,6 +421,13 @@ export default function SiffProposalDemo() {
   const [receptionSupplier, setReceptionSupplier] = useState<string>("Danfoss Ecuador S.A.");
   const [receptionDoc, setReceptionDoc] = useState<string>("Guía #DF-9942");
 
+
+  // Excel Upload State
+  const [isUploadExcelOpen, setIsUploadExcelOpen] = useState<boolean>(false);
+  const [excelFileName, setExcelFileName] = useState<string>("");
+  const [isParsingExcel, setIsParsingExcel] = useState<boolean>(false);
+  const [excelParsedProducts, setExcelParsedProducts] = useState<ExtendedProduct[] | null>(null);
+  const [excelError, setExcelError] = useState<string | null>(null);
   // Add Product Form State (Gerencia) with Image Upload / URL support
   const [isAddProductOpen, setIsAddProductOpen] = useState<boolean>(false);
   const [newCode, setNewCode] = useState<string>("");
@@ -297,6 +447,92 @@ export default function SiffProposalDemo() {
   const [newTransferFrom, setNewTransferFrom] = useState<"Bodega Central" | "Oficina Matriz">("Bodega Central");
   const [newTransferTo, setNewTransferTo] = useState<"Bodega Central" | "Oficina Matriz">("Oficina Matriz");
   const [newTransferQty, setNewTransferQty] = useState<number>(2);
+
+
+  // Handle direct file upload from computer
+  const handleExcelFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setExcelError(null);
+    setIsParsingExcel(true);
+    setExcelFileName(file.name);
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const buffer = new Uint8Array(ev.target?.result as ArrayBuffer);
+        const wb = XLSX.read(buffer, { type: "array" });
+        const extracted = parseSiffWorkbook(wb);
+        if (extracted.length === 0) {
+          setExcelError("No se encontraron registros de repuestos válidos en las hojas del archivo.");
+          setExcelParsedProducts(null);
+        } else {
+          setExcelParsedProducts(extracted);
+        }
+      } catch (err: any) {
+        console.error("Error parsing excel:", err);
+        setExcelError("Error al procesar el archivo Excel. Asegúrate de que sea un formato .xlsx o .xls válido.");
+      } finally {
+        setIsParsingExcel(false);
+      }
+    };
+    reader.onerror = () => {
+      setExcelError("No se pudo leer el archivo seleccionado.");
+      setIsParsingExcel(false);
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  // Handle 1-click test load of INVENTARIO SIFF ACTUALIZADO.xlsx
+  const handleLoadDefaultExcel = async () => {
+    setExcelError(null);
+    setIsParsingExcel(true);
+    setExcelFileName("INVENTARIO SIFF ACTUALIZADO.xlsx");
+    try {
+      const res = await fetch("/INVENTARIO_SIFF_ACTUALIZADO.xlsx");
+      if (!res.ok) throw new Error("No se pudo cargar el archivo predeterminado");
+      const arrayBuffer = await res.arrayBuffer();
+      const wb = XLSX.read(new Uint8Array(arrayBuffer), { type: "array" });
+      const extracted = parseSiffWorkbook(wb);
+      if (extracted.length === 0) {
+        setExcelError("No se encontraron productos en el documento.");
+        setExcelParsedProducts(null);
+      } else {
+        setExcelParsedProducts(extracted);
+      }
+    } catch (err: any) {
+      console.error(err);
+      setExcelError("No se pudo cargar automáticamente el archivo. Por favor selecciónalo con el botón de arriba.");
+    } finally {
+      setIsParsingExcel(false);
+    }
+  };
+
+  // Apply parsed products replacing catalog
+  const handleApplyExcelReplace = () => {
+    if (!excelParsedProducts || excelParsedProducts.length === 0) return;
+    setProducts(excelParsedProducts);
+    setIsUploadExcelOpen(false);
+    setToastMessage(`✅ ¡Catálogo actualizado con éxito! Se cargaron ${excelParsedProducts.length} repuestos desde el Excel.`);
+    setExcelParsedProducts(null);
+    setTimeout(() => setToastMessage(null), 4000);
+  };
+
+  // Apply parsed products merging with existing
+  const handleApplyExcelMerge = () => {
+    if (!excelParsedProducts || excelParsedProducts.length === 0) return;
+    const existingCodes = new Set(products.map((p) => p.code));
+    const newItems = excelParsedProducts.filter((p) => !existingCodes.has(p.code));
+    const updated = products.map((p) => {
+      const match = excelParsedProducts.find((ep) => ep.code === p.code && ep.location === p.location);
+      return match ? { ...p, stock: match.stock, lot: match.lot } : p;
+    });
+    setProducts([...updated, ...newItems]);
+    setIsUploadExcelOpen(false);
+    setToastMessage(`✅ ¡Inventario combinado! ${newItems.length} repuestos nuevos agregados y existencias actualizadas.`);
+    setExcelParsedProducts(null);
+    setTimeout(() => setToastMessage(null), 4000);
+  };
 
   // Handle Login Authentication
   const handleLoginSubmit = (e: React.FormEvent) => {
@@ -919,11 +1155,26 @@ export default function SiffProposalDemo() {
             {/* Right Action buttons - Aligned and balanced */}
             <div className="flex items-center gap-2">
               <button
+                type="button"
+                onClick={() => {
+                  setExcelError(null);
+                  setExcelParsedProducts(null);
+                  setIsUploadExcelOpen(true);
+                }}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md active:scale-95 transition-all"
+                title="Subir documento Excel con inventario"
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                <span>Subir Documento Excel</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setIsAddProductOpen(true)}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 shadow-lg shadow-amber-500/20 active:scale-95 transition-all"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 shadow-md active:scale-95 transition-all"
               >
                 <Plus className="w-4 h-4" />
-                <span>+ Nuevo Repuesto con Foto</span>
+                <span>Agregar Nuevo Repuesto</span>
               </button>
             </div>
           </div>
@@ -1800,6 +2051,210 @@ export default function SiffProposalDemo() {
         </main>
       )}
 
+
+      {/* ========================================================================= */}
+      {/* MODAL: SUBIR E IMPORTAR DOCUMENTO EXCEL DE INVENTARIO */}
+      {/* ========================================================================= */}
+      {isUploadExcelOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white border border-slate-200 w-full max-w-2xl rounded-3xl p-6 shadow-2xl relative my-8 animate-in fade-in zoom-in-95 text-slate-800">
+            <button
+              onClick={() => {
+                setIsUploadExcelOpen(false);
+                setExcelParsedProducts(null);
+                setExcelError(null);
+              }}
+              className="absolute right-5 top-5 text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 p-2 rounded-full transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Header */}
+            <div className="flex items-center gap-3 border-b border-slate-200 pb-4">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center shrink-0">
+                <FileSpreadsheet className="w-6 h-6" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">
+                  IMPORTADOR INTELIGENTE DE EXCEL
+                </span>
+                <h3 className="text-xl font-bold text-slate-900">Subir Documento Excel de Inventario</h3>
+                <p className="text-xs text-slate-500">
+                  Extrae automáticamente los repuestos, códigos, descripciones, lotes, ubicaciones y existencias desde tu archivo <strong>.xlsx / .xls</strong>.
+                </p>
+              </div>
+            </div>
+
+            {/* Content Area */}
+            <div className="space-y-4 mt-5">
+              {/* Dropzone / Upload area */}
+              <div
+                className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all ${
+                  isParsingExcel
+                    ? "border-emerald-400 bg-emerald-50/50"
+                    : "border-slate-300 hover:border-emerald-500 bg-slate-50/80 hover:bg-slate-50"
+                }`}
+              >
+                <input
+                  type="file"
+                  id="excel-file-input"
+                  accept=".xlsx, .xls, .csv"
+                  className="hidden"
+                  onChange={handleExcelFileUpload}
+                />
+                <label htmlFor="excel-file-input" className="cursor-pointer block space-y-2">
+                  <div className="w-12 h-12 mx-auto rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                    <Upload className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <span className="text-sm font-bold text-slate-800 block">
+                      Haz clic para seleccionar o arrastra tu archivo Excel
+                    </span>
+                    <span className="text-xs text-slate-500">
+                      Compatible con <strong>INVENTARIO SIFF ACTUALIZADO.xlsx</strong> y formatos de inventario estándar (.xlsx, .xls)
+                    </span>
+                  </div>
+                </label>
+
+                {/* 1-Click Load Official File Button */}
+                <div className="mt-4 pt-3 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-center gap-2">
+                  <span className="text-xs text-slate-500 font-medium">O prueba de inmediato con:</span>
+                  <button
+                    type="button"
+                    onClick={handleLoadDefaultExcel}
+                    disabled={isParsingExcel}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold transition-all shadow-xs"
+                  >
+                    <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Cargar archivo local INVENTARIO SIFF ACTUALIZADO.xlsx</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Parsing Indicator */}
+              {isParsingExcel && (
+                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-3 text-emerald-800 text-xs font-semibold">
+                  <RefreshCw className="w-4 h-4 animate-spin text-emerald-600 shrink-0" />
+                  <span>Leyendo hojas de cálculo, identificando columnas y extrayendo repuestos...</span>
+                </div>
+              )}
+
+              {/* Error Message */}
+              {excelError && (
+                <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-2.5 text-rose-800 text-xs font-medium">
+                  <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span>{excelError}</span>
+                </div>
+              )}
+
+              {/* Parsed Summary & Preview */}
+              {excelParsedProducts && (
+                <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
+                  <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+                    <span className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-2">
+                      Resultados de la Extracción ({excelFileName || "Excel"}):
+                    </span>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                      <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-xs">
+                        <div className="text-[10px] uppercase font-bold text-slate-500">Total Repuestos</div>
+                        <div className="text-xl font-black text-slate-900">{excelParsedProducts.length}</div>
+                      </div>
+                      <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-xs">
+                        <div className="text-[10px] uppercase font-bold text-emerald-700">Bodega Central</div>
+                        <div className="text-xl font-black text-emerald-700">
+                          {excelParsedProducts.filter((p) => p.location === "Bodega Central").length}
+                        </div>
+                      </div>
+                      <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-xs">
+                        <div className="text-[10px] uppercase font-bold text-cyan-700">Oficina Matriz</div>
+                        <div className="text-xl font-black text-cyan-700">
+                          {excelParsedProducts.filter((p) => p.location === "Oficina Matriz").length}
+                        </div>
+                      </div>
+                      <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-xs">
+                        <div className="text-[10px] uppercase font-bold text-slate-500">Unidades Físicas</div>
+                        <div className="text-xl font-black text-slate-900">
+                          {excelParsedProducts.reduce((acc, p) => acc + p.stock, 0).toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Preview Table (First 5 items) */}
+                  <div className="border border-slate-200 rounded-xl overflow-hidden bg-white">
+                    <div className="bg-slate-100 px-3 py-2 text-[11px] font-bold text-slate-700 uppercase flex items-center justify-between border-b border-slate-200">
+                      <span>Vista previa de repuestos extraídos</span>
+                      <span className="text-slate-500 font-normal">Primeros 5 registros</span>
+                    </div>
+                    <div className="overflow-x-auto max-h-48">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
+                          <tr>
+                            <th className="px-3 py-2">Código</th>
+                            <th className="px-3 py-2">Descripción Técnica</th>
+                            <th className="px-3 py-2">Lote</th>
+                            <th className="px-3 py-2">Ubicación</th>
+                            <th className="px-3 py-2">Stock</th>
+                            <th className="px-3 py-2">Categoría</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {excelParsedProducts.slice(0, 5).map((p, idx) => (
+                            <tr key={idx} className="hover:bg-slate-50">
+                              <td className="px-3 py-1.5 font-mono font-bold text-cyan-700">{p.code}</td>
+                              <td className="px-3 py-1.5 font-medium text-slate-900 truncate max-w-[200px]">{p.name}</td>
+                              <td className="px-3 py-1.5 font-mono text-slate-500">{p.lot}</td>
+                              <td className="px-3 py-1.5 text-slate-600">{p.location}</td>
+                              <td className="px-3 py-1.5 font-bold text-emerald-700">{p.stock} un.</td>
+                              <td className="px-3 py-1.5 text-slate-500 text-[11px]">{p.category}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Import Actions */}
+                  <div className="pt-2 flex flex-col sm:flex-row gap-2 justify-end">
+                    <button
+                      type="button"
+                      onClick={handleApplyExcelReplace}
+                      className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                    >
+                      <Check className="w-4 h-4" />
+                      <span>Reemplazar Inventario Completo ({excelParsedProducts.length} repuestos)</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleApplyExcelMerge}
+                      className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 font-bold text-xs active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Combinar / Agregar a Inventario Actual</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="mt-5 pt-3 border-t border-slate-200 flex justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsUploadExcelOpen(false);
+                  setExcelParsedProducts(null);
+                  setExcelError(null);
+                }}
+                className="px-5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-xs font-bold text-slate-700"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ========================================================================= */}
       {/* MODAL: REGISTRO DE MOVIMIENTO RÁPIDO CON FOTO ENCABEZADO */}
       {/* ========================================================================= */}
@@ -2074,28 +2529,37 @@ export default function SiffProposalDemo() {
                       placeholder="https://ejemplo.com/foto-valvula.jpg"
                       className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500"
                     />
-                    <div className="flex gap-1.5 flex-wrap">
-                      <button
-                        type="button"
-                        onClick={() => setNewImageUrl(CATEGORY_IMAGES["Válvulas & Controles"])}
-                        className="text-[10px] px-2 py-0.5 rounded bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
-                      >
-                        Válvula
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setNewImageUrl(CATEGORY_IMAGES["Bombas, Aceites & Filtros"])}
-                        className="text-[10px] px-2 py-0.5 rounded bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
-                      >
-                        Aceite / Bomba
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setNewImageUrl(CATEGORY_IMAGES["Mecánica & Compresores"])}
-                        className="text-[10px] px-2 py-0.5 rounded bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
-                      >
-                        Compresor
-                      </button>
+                    <div className="flex items-center gap-2">
+                      <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-all shadow-xs">
+                        <Camera className="w-3.5 h-3.5 text-slate-500" />
+                        <span>Subir foto desde dispositivo</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onload = (ev) => {
+                                if (ev.target?.result) {
+                                  setNewImageUrl(ev.target.result as string);
+                                }
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                        />
+                      </label>
+                      {newImageUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setNewImageUrl("")}
+                          className="text-[10px] text-rose-600 hover:text-rose-700 font-semibold"
+                        >
+                          Restablecer predeterminada
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
