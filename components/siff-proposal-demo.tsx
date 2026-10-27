@@ -35,7 +35,6 @@ import {
   Eye,
   EyeOff,
   LogOut,
-  DollarSign,
   TrendingUp,
   Truck,
   Plus,
@@ -119,8 +118,6 @@ export function getProductImage(product: SiffProduct & { imageUrl?: string }): s
 
 interface ExtendedProduct extends SiffProduct {
   imageUrl?: string;
-  cost?: number;
-  pvp?: number;
 }
 
 interface MovementRecord {
@@ -135,7 +132,6 @@ interface MovementRecord {
   reason: string;
   referenceDetail?: string;
   technician: string;
-  costEstimate?: number;
 }
 
 interface TransferRecord {
@@ -187,8 +183,7 @@ const INITIAL_MOVEMENTS: MovementRecord[] = [
     lot: "LT032",
     reason: "Servicio Técnico a Cliente",
     referenceDetail: "Pesquera Mar del Sur - Mantenimiento Compresor 2",
-    technician: "Técnico de Campo",
-    costEstimate: 45.0
+    technician: "Técnico de Campo"
   },
   {
     id: "mov-2",
@@ -201,8 +196,7 @@ const INITIAL_MOVEMENTS: MovementRecord[] = [
     lot: "LT029",
     reason: "Venta Mostrador",
     referenceDetail: "Factura N° 001-002-4521",
-    technician: "Jefe de Bodega",
-    costEstimate: 320.0
+    technician: "Jefe de Bodega"
   },
   {
     id: "mov-3",
@@ -215,8 +209,7 @@ const INITIAL_MOVEMENTS: MovementRecord[] = [
     lot: "LT028",
     reason: "Recepción de Proveedor",
     referenceDetail: "Guía Remisión Proveedor Danfoss/Bitzer #8841",
-    technician: "Jefe de Bodega",
-    costEstimate: 55.0
+    technician: "Jefe de Bodega"
   },
   {
     id: "mov-4",
@@ -229,8 +222,7 @@ const INITIAL_MOVEMENTS: MovementRecord[] = [
     lot: "LT003",
     reason: "Traspaso Interno",
     referenceDetail: "Envío a Oficina Matriz para exhibición",
-    technician: "Jefe de Bodega",
-    costEstimate: 85.0
+    technician: "Jefe de Bodega"
   }
 ];
 
@@ -258,9 +250,6 @@ export default function SiffProposalDemo() {
   const [products, setProducts] = useState<ExtendedProduct[]>(SIFF_PRODUCTS_DATA);
   const [movements, setMovements] = useState<MovementRecord[]>(INITIAL_MOVEMENTS);
   const [transfers, setTransfers] = useState<TransferRecord[]>(INITIAL_TRANSFERS);
-
-  // Show Financials toggle (exclusive to Gerencia)
-  const [showFinancials, setShowFinancials] = useState<boolean>(true);
 
   // Filters for Products
   const [selectedLocation, setSelectedLocation] = useState<"TODAS" | "Bodega Central" | "Oficina Matriz">("Bodega Central");
@@ -365,8 +354,7 @@ export default function SiffProposalDemo() {
     const oficinaCount = products.filter((p) => p.location === "Oficina Matriz").length;
     const lowStockCount = products.filter((p) => p.stock <= p.minStock).length;
     const totalStockUnits = products.reduce((acc, p) => acc + p.stock, 0);
-    const estimatedValuation = totalStockUnits * 68.5;
-    return { totalItems, bodegaCount, oficinaCount, lowStockCount, totalStockUnits, estimatedValuation };
+    return { totalItems, bodegaCount, oficinaCount, lowStockCount, totalStockUnits };
   }, [products]);
 
   // Handle Movement submission
@@ -405,8 +393,7 @@ export default function SiffProposalDemo() {
       lot: selectedProduct.lot,
       reason: selectedReason,
       referenceDetail: referenceDetail.trim() ? referenceDetail : undefined,
-      technician: currentUser.name,
-      costEstimate: quantity * 45.0
+      technician: currentUser.name
     };
 
     setMovements((prev) => [newMovement, ...prev]);
@@ -880,18 +867,6 @@ export default function SiffProposalDemo() {
             {/* Right Action buttons - Aligned and balanced */}
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setShowFinancials(!showFinancials)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-all ${
-                  showFinancials
-                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
-                    : "bg-slate-950 text-slate-400 border-slate-800"
-                }`}
-              >
-                <DollarSign className="w-3.5 h-3.5" />
-                <span>{showFinancials ? "Ocultar Costos" : "Ver Costos $"}</span>
-              </button>
-
-              <button
                 onClick={() => setIsAddProductOpen(true)}
                 className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 shadow-lg shadow-amber-500/20 active:scale-95 transition-all"
               >
@@ -914,13 +889,13 @@ export default function SiffProposalDemo() {
 
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow">
               <div className="text-slate-400 text-xs font-bold flex items-center justify-between mb-2">
-                <span>VALOR ESTIMADO INVENTARIO</span>
+                <span>TOTAL UNIDADES EN STOCK</span>
                 <TrendingUp className="w-4 h-4 text-emerald-400" />
               </div>
               <div className="text-2xl sm:text-3xl font-black text-emerald-400">
-                {showFinancials ? `$${metrics.estimatedValuation.toLocaleString("en-US", { minimumFractionDigits: 2 })}` : "••••••"}
+                {metrics.totalStockUnits.toLocaleString()} un.
               </div>
-              <p className="text-xs text-slate-500 mt-1">{metrics.totalStockUnits} unidades físicas totales</p>
+              <p className="text-xs text-slate-500 mt-1">Existencias físicas consolidadas</p>
             </div>
 
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow">
@@ -1069,20 +1044,16 @@ export default function SiffProposalDemo() {
                           </div>
                         </div>
 
-                        {/* Price & Action Button */}
+                        {/* Stock & Action Button without prices */}
                         <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between">
-                          {showFinancials ? (
-                            <div>
-                              <span className="text-[10px] text-slate-500 block">PVP Sugerido:</span>
-                              <span className="text-xs font-mono font-bold text-emerald-400">$72.00</span>
-                            </div>
-                          ) : (
-                            <span className="text-xs text-slate-400 font-semibold">{prod.stock} disponibles</span>
-                          )}
+                          <div className="flex items-center gap-1.5">
+                            <span className={`w-2 h-2 rounded-full ${isLow ? "bg-rose-500 animate-pulse" : "bg-emerald-400"}`}></span>
+                            <span className="text-xs text-slate-300 font-semibold">{prod.stock} un. disponibles</span>
+                          </div>
 
                           <button
                             onClick={() => handleSelectProduct(prod)}
-                            className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition-all shadow active:scale-95"
+                            className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition-all shadow active:scale-95"
                           >
                             Mover / Retirar
                           </button>
@@ -1104,12 +1075,6 @@ export default function SiffProposalDemo() {
                           <th className="px-4 py-3">Lote</th>
                           <th className="px-4 py-3">Ubicación</th>
                           <th className="px-4 py-3">Stock Actual</th>
-                          {showFinancials && (
-                            <>
-                              <th className="px-4 py-3">Costo Est.</th>
-                              <th className="px-4 py-3">PVP Sugerido</th>
-                            </>
-                          )}
                           <th className="px-4 py-3 text-right">Acción</th>
                         </tr>
                       </thead>
@@ -1142,12 +1107,6 @@ export default function SiffProposalDemo() {
                                   {prod.stock} un.
                                 </span>
                               </td>
-                              {showFinancials && (
-                                <>
-                                  <td className="px-4 py-3 font-mono text-slate-300">$45.00</td>
-                                  <td className="px-4 py-3 font-mono text-emerald-400 font-semibold">$72.00</td>
-                                </>
-                              )}
                               <td className="px-4 py-3 text-right">
                                 <button
                                   onClick={() => handleSelectProduct(prod)}

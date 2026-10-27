@@ -25,7 +25,7 @@ http://localhost:3000/siff
    - **Escáner QR y Código de Barras:** Visor animado con cámara y botones de simulación rápida en vivo.
 
 2. **Panel Gerencial & Kardex en Tiempo Real:**
-   - Métricas en vivo (Total de repuestos, stock por ubicación y alertas de stock crítico $\le 2$ unidades).
+   - Métricas en vivo (Total de repuestos, stock por ubicación y alertas de stock crítico ≤ 2 unidades).
    - Auditoría cronológica inalterable de cada movimiento: fecha, hora, repuesto, cantidad, técnico responsable y motivo.
 
 3. **Generador e Impresor de Etiquetas QR:**
