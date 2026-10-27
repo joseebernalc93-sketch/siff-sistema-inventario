@@ -52,6 +52,7 @@ import {
 } from "lucide-react";
 import * as XLSX from "xlsx-js-style";
 import { SIFF_PRODUCTS_DATA, SiffProduct } from "@/lib/siff-products";
+import { SIFF_SAMPLE_EXCEL_B64 } from "@/lib/siff-sample-excel";
 
 export type UserRole = "gerencia" | "bodega" | "tecnico" | "mostrador";
 
@@ -484,15 +485,18 @@ export default function SiffProposalDemo() {
   };
 
   // Handle 1-click test load of INVENTARIO SIFF ACTUALIZADO.xlsx
-  const handleLoadDefaultExcel = async () => {
+  const handleLoadDefaultExcel = () => {
     setExcelError(null);
     setIsParsingExcel(true);
     setExcelFileName("INVENTARIO SIFF ACTUALIZADO.xlsx");
     try {
-      const res = await fetch("/INVENTARIO_SIFF_ACTUALIZADO.xlsx");
-      if (!res.ok) throw new Error("No se pudo cargar el archivo predeterminado");
-      const arrayBuffer = await res.arrayBuffer();
-      const wb = XLSX.read(new Uint8Array(arrayBuffer), { type: "array" });
+      const binaryString = window.atob(SIFF_SAMPLE_EXCEL_B64);
+      const len = binaryString.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const wb = XLSX.read(bytes, { type: "array" });
       const extracted = parseSiffWorkbook(wb);
       if (extracted.length === 0) {
         setExcelError("No se encontraron productos en el documento.");
@@ -502,7 +506,7 @@ export default function SiffProposalDemo() {
       }
     } catch (err: any) {
       console.error(err);
-      setExcelError("No se pudo cargar automáticamente el archivo. Por favor selecciónalo con el botón de arriba.");
+      setExcelError("Error al procesar el archivo Excel.");
     } finally {
       setIsParsingExcel(false);
     }
