@@ -833,44 +833,8 @@ export default function SiffProposalDemo() {
               </div>
             </div>
 
-            {/* Role Switcher Pill + Logout */}
+            {/* Logout */}
             <div className="flex items-center gap-2">
-              <div className="hidden lg:flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
-                <span className="text-[10px] text-slate-500 uppercase font-bold px-2">Cambiar Rol:</span>
-                <button
-                  onClick={() => handleSwitchUser("gerencia")}
-                  className={`px-2.5 py-1 rounded-lg transition-all ${
-                    currentUser.role === "gerencia" ? "bg-amber-500 text-slate-950 font-bold" : "text-slate-400 hover:text-white"
-                  }`}
-                >
-                  👑 Gerencia
-                </button>
-                <button
-                  onClick={() => handleSwitchUser("bodega")}
-                  className={`px-2.5 py-1 rounded-lg transition-all ${
-                    currentUser.role === "bodega" ? "bg-cyan-500 text-slate-950 font-bold" : "text-slate-400 hover:text-white"
-                  }`}
-                >
-                  📦 Bodega
-                </button>
-                <button
-                  onClick={() => handleSwitchUser("tecnico")}
-                  className={`px-2.5 py-1 rounded-lg transition-all ${
-                    currentUser.role === "tecnico" ? "bg-emerald-500 text-slate-950 font-bold" : "text-slate-400 hover:text-white"
-                  }`}
-                >
-                  🛠️ Técnico
-                </button>
-                <button
-                  onClick={() => handleSwitchUser("mostrador")}
-                  className={`px-2.5 py-1 rounded-lg transition-all ${
-                    currentUser.role === "mostrador" ? "bg-blue-500 text-white font-bold" : "text-slate-400 hover:text-white"
-                  }`}
-                >
-                  🛒 Mostrador
-                </button>
-              </div>
-
               <button
                 onClick={() => setCurrentUser(null)}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-all"
