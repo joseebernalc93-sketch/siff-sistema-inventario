@@ -1004,24 +1004,9 @@ export default function SiffProposalDemo() {
       const wsOficina = XLSX.utils.aoa_to_sheet([oficinaHeaders, ...oficinaRows]);
       XLSX.utils.book_append_sheet(wb, wsOficina, "INVENTARIOOFICINA");
 
-      const wbout = XLSX.write(wb, { bookType: "xlsx", type: "binary" });
-      const s2ab = (s: string) => {
-        const buf = new ArrayBuffer(s.length);
-        const view = new Uint8Array(buf);
-        for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xff;
-        return buf;
-      };
-      const blob = new Blob([s2ab(wbout)], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
       const now = new Date();
       const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
-      link.download = `INVENTARIO_SIFF_ACTUALIZADO_${dateStr}.xlsx`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      saveWorkbookToBrowser(wb, `INVENTARIO_SIFF_ACTUALIZADO_${dateStr}.xlsx`);
 
       setToastMessage(`📥 Excel de inventario descargado (${products.length} repuestos).`);
       setTimeout(() => setToastMessage(null), 3500);
@@ -1029,6 +1014,35 @@ export default function SiffProposalDemo() {
       console.error("Error al exportar inventario:", err);
       alert("Error al descargar Excel: " + err.message);
     }
+  };
+
+  // Helper to trigger browser download with correct filename and extension
+  const saveWorkbookToBrowser = (wb: XLSX.WorkBook, filename: string) => {
+    // Generate binary buffer using Uint8Array
+    const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const blob = new Blob([wbout], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+
+    // Critical: Do NOT revokeObjectURL immediately, otherwise Chrome fails to retrieve the filename and uses an internal UUID!
+    setTimeout(() => {
+      try {
+        if (link.parentNode) {
+          document.body.removeChild(link);
+        }
+        URL.revokeObjectURL(url);
+      } catch (e) {
+        // cleanup
+      }
+    }, 60000);
   };
 
   // Export Kardex to Excel
@@ -1074,24 +1088,9 @@ export default function SiffProposalDemo() {
       const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
       XLSX.utils.book_append_sheet(wb, ws, "KARDEX_AUDITORIA");
 
-      const wbout = XLSX.write(wb, { bookType: "xlsx", type: "binary" });
-      const s2ab = (s: string) => {
-        const buf = new ArrayBuffer(s.length);
-        const view = new Uint8Array(buf);
-        for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xff;
-        return buf;
-      };
-      const blob = new Blob([s2ab(wbout)], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
       const now = new Date();
       const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
-      link.download = `KARDEX_AUDITORIA_SIFF_${dateStr}.xlsx`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      saveWorkbookToBrowser(wb, `KARDEX_AUDITORIA_SIFF_${dateStr}.xlsx`);
 
       setToastMessage(`📥 Kardex exportado a Excel (${movements.length} transacciones).`);
       setTimeout(() => setToastMessage(null), 3500);
