@@ -1,0 +1,15 @@
+.env
+.env.local
+.env.*.local
+.next
+.vercel
+node_modules
+/mobile/
+/mobile/**/.dart_tool
+/mobile/**/build
+/mobile/**/android/.gradle
+/docs/
+/tools/
+next-dev*.log
+*.tsbuildinfo
+*.xlsx

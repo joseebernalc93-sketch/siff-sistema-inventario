@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "748645451209",
+    "project_id": "minimarket-ia-joelys",
+    "storage_bucket": "minimarket-ia-joelys.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:748645451209:android:52ea3d2c2836ad5f4b1418",
+        "android_client_info": {
+          "package_name": "com.minimarketia.minimarket_cliente"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDYKK5gGb7TJcF8SK-ay9maoKC46yBi0jM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

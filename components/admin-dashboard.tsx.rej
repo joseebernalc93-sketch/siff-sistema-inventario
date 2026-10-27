@@ -1,0 +1,91 @@
+diff a/components/admin-dashboard.tsx b/components/admin-dashboard.tsx	(rejected hunks)
+@@ -5156,89 +5146,6 @@ export default function AdminDashboard() {
+ 
+       return {
+         ...current,
+-        purchase_cost: formatMoneyInputValue(
+-          unitCost * getBulkStockUnitPounds(nextUnit),
+-        ),
+-        purchase_cost_input_unit: nextUnit,
+-      };
+-    });
+-  }
+-
+-  function handleAddProductPresentation() {
+-    setProductForm((current) => ({
+-      ...current,
+-      presentations: [
+-        ...getProductPresentationDrafts(current),
+-        createProductPresentationDraft({
+-          is_default: false,
+-          name: "",
+-          price: "",
+-          unit_quantity: "",
+-          use_for_purchase: true,
+-          use_for_sale: false,
+-        }),
+-      ],
+-    }));
+-  }
+-
+-  function handleProductPresentationField<
+-    K extends keyof Pick<
+-      ProductPresentationDraft,
+-      "name" | "unit_quantity" | "price" | "use_for_purchase" | "use_for_sale"
+-    >,
+-  >(
+-    index: number,
+-    field: K,
+-    value: ProductPresentationDraft[K],
+-  ) {
+-    setProductForm((current) => {
+-      const presentations = getProductPresentationDrafts(current);
+-
+-      if (!presentations[index]) {
+-        return current;
+-      }
+-
+-      presentations[index] = {
+-        ...presentations[index],
+-        [field]: value,
+-      };
+-
+-      if (field === "name" && normalizeProductMeasurementUnit(current.measurement_unit) === "lb") {
+-        const nameStr = String(value).trim();
+-        const bulkPresets: Record<string, string> = {
+-          "Libra": "1",
+-          "Media Libra": "0.5",
+-          "Cuarto de Libra": "0.25",
+-          "Kilo": "2.20462",
+-          "Arroba": "25",
+-          "Quintal": "100",
+-        };
+-        
+-        const presetKeys = Object.keys(bulkPresets);
+-        const matchedKey = presetKeys.find((key) => key.localeCompare(nameStr, undefined, { sensitivity: 'base' }) === 0);
+-        
+-        if (matchedKey) {
+-           presentations[index].unit_quantity = bulkPresets[matchedKey];
+-        }
+-      }
+-
+-      return { ...current, presentations };
+-    });
+-  }
+-
+-  function handleRemoveProductPresentation(index: number) {
+-    setProductForm((current) => {
+-      const presentations = getProductPresentationDrafts(current)
+-        .filter((_, presentationIndex) => presentationIndex !== index);
+-
+-      return {
+-        ...current,
+-        presentations: normalizeProductPresentationDrafts(presentations, current),
+-      };
+-    });
+-  }
+-
+-  function handleProductCategoryInput(value: string) {
+     const matchedCategory = getExactComboboxItem(
+       categories,
+       value,

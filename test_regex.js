@@ -1,0 +1,1 @@
+console.log('Necesita cambio/vuelto: Si (Para 10)'.replace(/\(Para ([\d.]+)\)/g, '(Para 1)')); console.log('Necesita cambio/vuelto: Si (Para 10)'.replace(/\(Para ([\d.]+)\)/g, '(Para )')); console.log('Necesita cambio/vuelto: Si (Para 10)'.replace(/\(Para ([\d.]+)\)/g, '(Para \1)'));
