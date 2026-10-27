@@ -1749,7 +1749,9 @@ export default function SiffProposalDemo() {
                     return (
                       <div
                         key={prod.id}
-                        className="bg-white border border-slate-200 hover:border-amber-400 rounded-2xl p-4 flex flex-col justify-between transition-all hover:shadow-lg hover:shadow-slate-200/60 group"
+                        onClick={() => handleOpenEditProduct(prod)}
+                        className="bg-white border border-slate-200 hover:border-amber-400 rounded-2xl p-4 flex flex-col justify-between transition-all hover:shadow-lg hover:shadow-slate-200/60 group cursor-pointer"
+                        title="Toca la cartilla para editar el repuesto o su imagen"
                       >
                         <div>
                           {/* Product Image Frame (Clean square photo container like in reference Image 1) */}
@@ -1764,23 +1766,9 @@ export default function SiffProposalDemo() {
                               <div className="w-full h-full rounded-lg bg-slate-100 flex flex-col items-center justify-center text-slate-400 gap-1.5 p-3 text-center border-2 border-dashed border-slate-200">
                                 <ImageIcon className="w-8 h-8 text-slate-300" />
                                 <span className="text-[11px] font-semibold text-slate-500">Sin foto asignada</span>
-                                <span className="text-[9px] text-slate-400">Clic en Editar para agregar</span>
+                                <span className="text-[9px] text-slate-400">Toca para agregar una imagen</span>
                               </div>
                             )}
-
-                            {/* Quick Edit Overlay Button */}
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleOpenEditProduct(prod);
-                              }}
-                              className="absolute top-2 left-2 bg-white/95 hover:bg-white text-slate-700 hover:text-amber-600 px-2 py-1 rounded-lg text-[10px] font-bold shadow-xs border border-slate-200 transition-all flex items-center gap-1 active:scale-95 z-10"
-                              title="Modificar nombre, foto y detalles del repuesto"
-                            >
-                              <Pencil className="w-3 h-3 text-amber-500" />
-                              <span>Editar</span>
-                            </button>
 
                             {/* Stock badge overlay */}
                             <div className="absolute top-2 right-2">
@@ -1817,30 +1805,22 @@ export default function SiffProposalDemo() {
                         </div>
 
                         {/* Stock & Action Buttons without prices */}
-                        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-1.5 min-w-0">
+                        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
                             <span className={`w-2 h-2 rounded-full shrink-0 ${isLow ? "bg-rose-500 animate-pulse" : "bg-emerald-400"}`}></span>
-                            <span className="text-xs text-slate-600 font-semibold truncate">{prod.stock} un.</span>
+                            <span className="text-xs text-slate-600 font-semibold">{prod.stock} un. disponibles</span>
                           </div>
 
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <button
-                              type="button"
-                              onClick={() => handleOpenEditProduct(prod)}
-                              className="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all border border-slate-200 flex items-center gap-1 active:scale-95"
-                              title="Modificar descripción, foto o datos"
-                            >
-                              <Pencil className="w-3 h-3 text-slate-500" />
-                              <span>Editar</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleSelectProduct(prod)}
-                              className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition-all shadow active:scale-95"
-                            >
-                              Mover / Retirar
-                            </button>
-                          </div>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSelectProduct(prod);
+                            }}
+                            className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition-all shadow active:scale-95"
+                          >
+                            Mover / Retirar
+                          </button>
                         </div>
                       </div>
                     );
