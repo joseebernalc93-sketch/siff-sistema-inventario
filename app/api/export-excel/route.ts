@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import XLSX from "xlsx-js-style";
 import { SIFF_PRODUCTS_DATA } from "@/lib/siff-products";
+import { buildOriginalSiffWorkbook } from "@/lib/siff-excel-export";
 
 export const dynamic = "force-dynamic";
 
@@ -88,51 +89,10 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Default: INVENTORY (3 sheets matching SIFF layout)
-    const wb = XLSX.utils.book_new();
-
-    // Sheet 1: CONSOLIDADO
-    const consolidadoHeaders = [
-      "CÓDIGO PRODUCTO",
-      "DESCRIPCIÓN TÉCNICA",
-      "CATEGORÍA",
-      "MARCA",
-      "UBICACIÓN",
-      "LOTE",
-      "TOTAL PRODUCTO (STOCK)",
-      "STOCK MÍNIMO",
-      "ESTADO STOCK",
-    ];
-    const consolidadoRows = SIFF_PRODUCTS_DATA.map((p) => [
-      p.code,
-      p.name,
-      p.category,
-      p.brand,
-      p.location,
-      p.lot,
-      p.stock,
-      p.minStock || 2,
-      p.stock <= (p.minStock || 2) ? "STOCK CRÍTICO" : "ÓPTIMO",
-    ]);
-    const wsConsolidado = XLSX.utils.aoa_to_sheet([consolidadoHeaders, ...consolidadoRows]);
-    XLSX.utils.book_append_sheet(wb, wsConsolidado, "INVENTARIO CONSOLIDADO");
-
-    // Sheet 2: INVENTARIOBODEGA
-    const bodegaItems = SIFF_PRODUCTS_DATA.filter((p) => p.location === "Bodega Central");
-    const bodegaHeaders = ["CÓDIGO PRODUCTO", "DESCRIPCIÓN", "TOTAL PRODUCTO", "LOTE", "CATEGORÍA", "MARCA"];
-    const bodegaRows = bodegaItems.map((p) => [p.code, p.name, p.stock, p.lot, p.category, p.brand]);
-    const wsBodega = XLSX.utils.aoa_to_sheet([bodegaHeaders, ...bodegaRows]);
-    XLSX.utils.book_append_sheet(wb, wsBodega, "INVENTARIOBODEGA");
-
-    // Sheet 3: INVENTARIOOFICINA
-    const oficinaItems = SIFF_PRODUCTS_DATA.filter((p) => p.location === "Oficina Matriz");
-    const oficinaHeaders = ["CÓDIGO PRODUCTO", "DESCRIPCIÓN", "TOTAL PRODUCTO", "LOTE", "CATEGORÍA", "MARCA"];
-    const oficinaRows = oficinaItems.map((p) => [p.code, p.name, p.stock, p.lot, p.category, p.brand]);
-    const wsOficina = XLSX.utils.aoa_to_sheet([oficinaHeaders, ...oficinaRows]);
-    XLSX.utils.book_append_sheet(wb, wsOficina, "INVENTARIOOFICINA");
-
+    // Default: INVENTARIO SIFF ACTUALIZADO (exact 6 original sheets with styles, buttons & formatting)
+    const wb = buildOriginalSiffWorkbook(SIFF_PRODUCTS_DATA);
     const filename = `INVENTARIO_SIFF_ACTUALIZADO_${dateStr}.xlsx`;
-    const buffer = XLSX.write(wb, { bookType: "xlsx", type: "buffer" });
+    const buffer = XLSX.write(wb, { bookType: "xlsx", type: "buffer", cellStyles: true });
 
     return new Response(buffer, {
       status: 200,

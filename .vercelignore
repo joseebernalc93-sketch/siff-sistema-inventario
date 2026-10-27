@@ -12,4 +12,4 @@ node_modules
 /tools/
 next-dev*.log
 *.tsbuildinfo
-*.xlsx
+~$*.xlsx

@@ -57,6 +57,7 @@ import {
 import * as XLSX from "xlsx-js-style";
 import { SIFF_PRODUCTS_DATA, SiffProduct } from "@/lib/siff-products";
 import { SIFF_SAMPLE_EXCEL_B64 } from "@/lib/siff-sample-excel";
+import { buildOriginalSiffWorkbook } from "@/lib/siff-excel-export";
 
 export type UserRole = "gerencia" | "bodega" | "tecnico" | "mostrador";
 
@@ -945,70 +946,16 @@ export default function SiffProposalDemo() {
     }
   };
 
-  // Export full inventory to Excel matching SIFF format
+  // Export full inventory in exact original SIFF 6-sheet format
   const handleExportInventoryExcel = () => {
     try {
-      const wb = XLSX.utils.book_new();
-
-      // Sheet 1: CONSOLIDADO
-      const consolidadoHeaders = [
-        "CÓDIGO PRODUCTO",
-        "DESCRIPCIÓN TÉCNICA",
-        "CATEGORÍA",
-        "MARCA",
-        "UBICACIÓN",
-        "LOTE",
-        "TOTAL PRODUCTO (STOCK)",
-        "STOCK MÍNIMO",
-        "ESTADO STOCK"
-      ];
-      const consolidadoRows = products.map((p) => [
-        p.code,
-        p.name,
-        p.category,
-        p.brand,
-        p.location,
-        p.lot,
-        p.stock,
-        p.minStock || 2,
-        p.stock <= (p.minStock || 2) ? "STOCK CRÍTICO" : "ÓPTIMO"
-      ]);
-      const wsConsolidado = XLSX.utils.aoa_to_sheet([consolidadoHeaders, ...consolidadoRows]);
-      XLSX.utils.book_append_sheet(wb, wsConsolidado, "INVENTARIO CONSOLIDADO");
-
-      // Sheet 2: INVENTARIOBODEGA
-      const bodegaItems = products.filter((p) => p.location === "Bodega Central");
-      const bodegaHeaders = ["CÓDIGO PRODUCTO", "DESCRIPCIÓN", "TOTAL PRODUCTO", "LOTE", "CATEGORÍA", "MARCA"];
-      const bodegaRows = bodegaItems.map((p) => [
-        p.code,
-        p.name,
-        p.stock,
-        p.lot,
-        p.category,
-        p.brand
-      ]);
-      const wsBodega = XLSX.utils.aoa_to_sheet([bodegaHeaders, ...bodegaRows]);
-      XLSX.utils.book_append_sheet(wb, wsBodega, "INVENTARIOBODEGA");
-
-      // Sheet 3: INVENTARIOOFICINA
-      const oficinaItems = products.filter((p) => p.location === "Oficina Matriz");
-      const oficinaHeaders = ["CÓDIGO PRODUCTO", "DESCRIPCIÓN", "TOTAL PRODUCTO", "LOTE", "CATEGORÍA", "MARCA"];
-      const oficinaRows = oficinaItems.map((p) => [
-        p.code,
-        p.name,
-        p.stock,
-        p.lot,
-        p.category,
-        p.brand
-      ]);
-      const wsOficina = XLSX.utils.aoa_to_sheet([oficinaHeaders, ...oficinaRows]);
-      XLSX.utils.book_append_sheet(wb, wsOficina, "INVENTARIOOFICINA");
+      const wb = buildOriginalSiffWorkbook(products);
 
       const now = new Date();
       const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
-      saveWorkbookToBrowser(wb, `INVENTARIO_SIFF_ACTUALIZADO_${dateStr}.xlsx`);
+      saveWorkbookToBrowser(wb, `INVENTARIO_SIFF_ACTUALIZADO_${dateStr}.xlsx`, "inventory");
 
-      setToastMessage(`📥 Excel de inventario descargado (${products.length} repuestos).`);
+      setToastMessage(`📥 Excel descargado en formato original SIFF (6 hojas sincronizadas).`);
       setTimeout(() => setToastMessage(null), 3500);
     } catch (err: any) {
       console.error("Error al exportar inventario:", err);
